@@ -1,4 +1,4 @@
-name: Bump and Publish to npm
+name: Bump and Publish
 on:
   push:
     branches: [main]
@@ -7,40 +7,41 @@ jobs:
   build-bump-publish:
     runs-on: ubuntu-latest
     permissions:
-      contents: write 
+      contents: write
+      actions: write
+      id-token: write
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '24'
           registry-url: 'https://registry.npmjs.org/'
-          cache: 'yarn' # Explicitly caching Yarn
+          cache: 'yarn'
 
-      # 1. Install dependencies using Yarn
-      - name: Install Dependencies
-        run: yarn install --frozen-lockfile
+      # 1. Install dependencies
+      - run: yarn install --frozen-lockfile
 
-      # 2. Configure Git
+      # 2. Configure Git for the bump
       - name: Git Config
         run: |
           git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.email "github-actions[bot]@://github.com"
 
-      # 3. Bump version (This will only touch package.json since there is no package-lock)
+      # 3. Bump version (minor), commit, and tag
+      # Use [skip ci] in the message to prevent an infinite loop
       - name: Bump Version
-        run: npm version minor -m "chore: bump version to %s [skip ci]"
+        run: |
+          npm version minor -m "chore: bump version to %s [skip ci]"
 
-      # 4. Push changes back to GitHub
+      # 4. Push the new version and tag back to GitHub
       - name: Push changes
         run: git push --follow-tags
 
-      # 5. Publish to npm
+      # 5. Publish to npm using your secret token
       - name: Publish to npm
         run: npm publish --access public
         env:
