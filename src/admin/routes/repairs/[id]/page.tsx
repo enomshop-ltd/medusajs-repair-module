@@ -226,7 +226,7 @@ const RepairDetailPage = () => {
               </Text>
             )}
           </div>
-          <a href="/app/dashboard/repairs">
+          <a href="/app/repairs">
             <Button variant="secondary">Back to List</Button>
           </a>
         </div>
@@ -459,7 +459,6 @@ const RepairDetailPage = () => {
 }
 
 export const config = defineRouteConfig({
-  label: "Repair Detail",
 })
 
 export default RepairDetailPage
