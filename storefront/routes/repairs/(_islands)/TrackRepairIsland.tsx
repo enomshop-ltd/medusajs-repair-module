@@ -423,13 +423,13 @@ export default function TrackRepairIsland({
                   <div
                     key={update.id}
                     className={`p-4 rounded ${
-                      update.sender_type === "customer"
+                      update.author_type === "customer"
                         ? "bg-blue-50 ml-8"
                         : "bg-gray-50 mr-8"
                     }`}
                   >
                     <p className="text-xs text-gray-500 mb-1">
-                      {update.sender_type === "customer" ? "You" : "Technician"}{" "}
+                      {update.author_type === "customer" ? "You" : "Technician"}{" "}
                       - {new Date(update.created_at).toLocaleString()}
                     </p>
                     <p>{update.message}</p>

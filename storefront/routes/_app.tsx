@@ -16,11 +16,21 @@ export default function App({ Component }: AppProps) {
           {/* Header placeholder */}
           <header class="bg-white shadow-sm py-4">
             <div class="max-w-7xl mx-auto px-4 flex justify-between items-center">
-              <a href="/" class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600" f-client-nav>
+              <a
+                href="/"
+                class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600"
+                f-client-nav
+              >
                 Repair Shop
               </a>
               <nav class="flex gap-4">
-                <a href="/repairs/track" class="text-gray-600 hover:text-blue-600 transition-colors" f-client-nav>Track Repair</a>
+                <a
+                  href="/repairs/track"
+                  class="text-gray-600 hover:text-blue-600 transition-colors"
+                  f-client-nav
+                >
+                  Track Repair
+                </a>
               </nav>
             </div>
           </header>
@@ -32,7 +42,10 @@ export default function App({ Component }: AppProps) {
           {/* Footer placeholder */}
           <footer class="bg-gray-800 text-white py-8 mt-auto">
             <div class="max-w-7xl mx-auto px-4 text-center">
-              <p>&copy; {new Date().getFullYear()} Repair Shop. All rights reserved.</p>
+              <p>
+                &copy; {new Date().getFullYear()} Repair Shop. All rights
+                reserved.
+              </p>
             </div>
           </footer>
         </div>

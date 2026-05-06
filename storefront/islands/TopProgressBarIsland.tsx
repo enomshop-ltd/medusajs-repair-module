@@ -12,7 +12,7 @@ export default function TopProgressBarIsland() {
       console.debug("[TopProgressBarIsland] Client navigation started.");
       setVisible(true);
       setProgress(15);
-      
+
       if (interval) clearInterval(interval);
       interval = setInterval(() => {
         setProgress((prev) => {
@@ -26,7 +26,7 @@ export default function TopProgressBarIsland() {
       console.debug("[TopProgressBarIsland] Client navigation completed.");
       if (interval) clearInterval(interval);
       setProgress(100);
-      
+
       timeout = setTimeout(() => {
         setVisible(false);
         setTimeout(() => setProgress(0), 300); // reset after fade out
@@ -37,7 +37,7 @@ export default function TopProgressBarIsland() {
       console.error("[TopProgressBarIsland] Client navigation error.");
       if (interval) clearInterval(interval);
       setProgress(100);
-      
+
       timeout = setTimeout(() => {
         setVisible(false);
         setTimeout(() => setProgress(0), 300);
@@ -47,7 +47,7 @@ export default function TopProgressBarIsland() {
     // Adding listener for Fresh client side routing events.
     globalThis.addEventListener("fresh:render", startProgress);
     globalThis.addEventListener("fresh:rendered", completeProgress);
-    
+
     // In some builds, custom events trigger, so we capture these if people implement standard router custom events:
     globalThis.addEventListener("router:start", startProgress);
     globalThis.addEventListener("router:done", completeProgress);

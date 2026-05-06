@@ -76,8 +76,8 @@ type RepairTicket = {
   updates?: Array<{
     id: string;
     message: string;
-    sender_type: string;
-    sender_id?: string;
+    author_type: string;
+    author_id?: string;
     created_at: string;
   }>;
 };
@@ -103,6 +103,20 @@ const RepairDetailPage = () => {
   const [isAddingPart, setIsAddingPart] = useState(false);
   const [customPartName, setCustomPartName] = useState("");
   const [customPartPrice, setCustomPartPrice] = useState("");
+
+  const [users, setUsers] = useState<any[]>([]);
+
+  useEffect(() => {
+    // load technicians/users immediately
+    fetch("/admin/users", { credentials: "include" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.users) {
+          setUsers(data.users);
+        }
+      })
+      .catch((err) => console.error(err));
+  }, []);
 
   const loadTicket = async () => {
     try {
@@ -256,7 +270,6 @@ const RepairDetailPage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: newMessage,
-          sender_type: "technician",
         }),
       });
       toast.success("Message sent");
@@ -269,17 +282,44 @@ const RepairDetailPage = () => {
 
   const handleUpdateCosts = async () => {
     try {
-      const laborAmount = Math.round(parseFloat(laborCost) * 100);
-      await fetch(`/admin/repairs/${id}/costs`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          labor_estimate: laborAmount,
-          estimated_completion: etc ? new Date(etc).toISOString() : null,
-          technician_name: technicianName || null,
+      const promises = [];
+      if (laborCost !== "") {
+        const laborAmount = Math.round(parseFloat(laborCost) * 100);
+        if (!isNaN(laborAmount)) {
+          promises.push(
+            fetch(`/admin/repairs/${id}/costs`, {
+              method: "POST",
+              credentials: "include",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                labor_estimate: laborAmount,
+              }),
+            }),
+          );
+        }
+      }
+      promises.push(
+        fetch(`/admin/repairs/${id}/details`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            estimated_completion: etc ? new Date(etc).toISOString() : null,
+            technician_name: technicianName || null,
+          }),
         }),
-      });
+      );
+      if (ticket && newStatus !== ticket.status) {
+        promises.push(
+          fetch(`/admin/repairs/${id}/status`, {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: newStatus }),
+          }),
+        );
+      }
+      await Promise.all(promises);
       toast.success("Details updated");
       loadTicket();
     } catch (err) {
@@ -438,6 +478,104 @@ const RepairDetailPage = () => {
             </div>
           </Container>
 
+          {/* Parts */}
+          <Container>
+            <Heading level="h2" className="mb-4">
+              Parts & Inventory
+            </Heading>
+
+            <div className="space-y-4 mb-6">
+              {ticket.parts && ticket.parts.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Inventory Parts Used</Label>
+                  {ticket.parts.map((p) => (
+                    <div
+                      key={p.id}
+                      className="flex justify-between p-2 bg-ui-bg-subtle rounded border text-sm"
+                    >
+                      <Text>{p.title}</Text>
+                      <Text className="text-ui-fg-subtle">{p.sku || "-"}</Text>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {ticket.custom_parts && ticket.custom_parts.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Custom Parts</Label>
+                  {ticket.custom_parts.map((cp, idx) => (
+                    <div
+                      key={idx}
+                      className="flex justify-between p-2 bg-ui-bg-subtle rounded border text-sm"
+                    >
+                      <Text>{cp.name}</Text>
+                      <Text className="font-medium">
+                        ${(cp.price / 100).toFixed(2)}
+                      </Text>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4 pt-4 border-t">
+              <Heading level="h3" className="text-sm">
+                Add Inventory Part
+              </Heading>
+              <div className="flex gap-2">
+                <Select
+                  value={selectedInventoryPart}
+                  onValueChange={setSelectedInventoryPart}
+                >
+                  <Select.Trigger className="flex-1">
+                    <Select.Value placeholder="Select variant..." />
+                  </Select.Trigger>
+                  <Select.Content>
+                    {inventoryParts.map((p) => (
+                      <Select.Item key={p.id} value={p.id}>
+                        {p.title} {p.sku ? `(${p.sku})` : ""}
+                      </Select.Item>
+                    ))}
+                  </Select.Content>
+                </Select>
+                <Button
+                  variant="secondary"
+                  onClick={handleAddInventoryPart}
+                  disabled={isAddingPart || !selectedInventoryPart}
+                >
+                  Add
+                </Button>
+              </div>
+
+              <Heading level="h3" className="text-sm mt-4">
+                Add Custom Part
+              </Heading>
+              <div className="flex gap-2">
+                <Input
+                  className="flex-1"
+                  placeholder="Part description"
+                  value={customPartName}
+                  onChange={(e) => setCustomPartName(e.target.value)}
+                />
+                <Input
+                  type="number"
+                  step="0.01"
+                  className="w-24"
+                  placeholder="Cost"
+                  value={customPartPrice}
+                  onChange={(e) => setCustomPartPrice(e.target.value)}
+                />
+                <Button
+                  variant="secondary"
+                  onClick={handleAddCustomPart}
+                  disabled={isAddingPart || !customPartName || !customPartPrice}
+                >
+                  Add
+                </Button>
+              </div>
+            </div>
+          </Container>
+
           {/* Media */}
           {ticket.media && ticket.media.length > 0 && (
             <Container>
@@ -479,11 +617,24 @@ const RepairDetailPage = () => {
             <div className="space-y-4">
               <div>
                 <Label>Technician</Label>
-                <Input
+                <Select
                   value={technicianName}
-                  onChange={(e) => setTechnicianName(e.target.value)}
-                  placeholder="Assign technician"
-                />
+                  onValueChange={setTechnicianName}
+                >
+                  <Select.Trigger>
+                    <Select.Value placeholder="Assign technician" />
+                  </Select.Trigger>
+                  <Select.Content>
+                    {users.map((user) => (
+                      <Select.Item
+                        key={user.id}
+                        value={`${user.first_name} ${user.last_name}`}
+                      >
+                        {user.first_name} {user.last_name} ({user.email})
+                      </Select.Item>
+                    ))}
+                  </Select.Content>
+                </Select>
               </div>
               <div>
                 <Label>Status</Label>
@@ -522,18 +673,11 @@ const RepairDetailPage = () => {
                   onChange={(e) => setEtc(e.target.value)}
                 />
               </div>
-              <div className="flex gap-2">
-                <Button
-                  onClick={handleUpdateStatus}
-                  variant="secondary"
-                  className="flex-1"
-                >
-                  Update Status
-                </Button>
+              <div className="flex gap-2 mt-4">
                 <Button
                   onClick={handleUpdateCosts}
                   variant="primary"
-                  className="flex-1"
+                  className="w-full"
                 >
                   Save Details
                 </Button>
@@ -611,14 +755,14 @@ const RepairDetailPage = () => {
                     <div
                       key={update.id}
                       className={`p-3 rounded ${
-                        update.sender_type === "customer"
+                        update.author_type === "customer"
                           ? "bg-ui-bg-subtle"
                           : "bg-blue-50 ml-8"
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
                         <Badge size="small">
-                          {update.sender_type === "customer"
+                          {update.author_type === "customer"
                             ? "Customer"
                             : "Technician"}
                         </Badge>

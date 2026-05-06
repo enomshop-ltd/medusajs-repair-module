@@ -65,6 +65,11 @@ const AddMessageSchema = z.object({
   message: z.string(),
 });
 
+const AddDetailsSchema = z.object({
+  estimated_completion: z.string().nullable().optional(),
+  technician_name: z.string().nullable().optional(),
+});
+
 export const repairMiddlewares: MiddlewareRoute[] = [
   {
     method: ["GET"],
@@ -110,5 +115,10 @@ export const repairMiddlewares: MiddlewareRoute[] = [
     method: ["POST"],
     matcher: "/admin/repairs/:id/messages",
     middlewares: [validateAndTransformBody(AddMessageSchema)],
+  },
+  {
+    method: ["POST"],
+    matcher: "/admin/repairs/:id/details",
+    middlewares: [validateAndTransformBody(AddDetailsSchema)],
   },
 ];

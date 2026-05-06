@@ -28,14 +28,26 @@ export async function GET(
   let parts = [];
   try {
     const linkQuery = req.scope.resolve(ContainerRegistrationKeys.QUERY);
+
+    // First try with plural name which is standard for isList: true
     const { data: ticketWithParts } = await linkQuery.graph({
       entity: "repair_ticket",
-      fields: ["id", "product_variant.*"],
+      fields: ["id", "product_variants.*"],
       filters: { id: [req.params.id] },
     });
-    parts = ticketWithParts?.[0]?.product_variant || [];
+    parts = ticketWithParts?.[0]?.product_variants || [];
   } catch (err) {
-    console.warn("Failed to fetch product_variant link", err);
+    try {
+      const linkQuery = req.scope.resolve(ContainerRegistrationKeys.QUERY);
+      const { data: ticketWithParts } = await linkQuery.graph({
+        entity: "repair_ticket",
+        fields: ["id", "product_variant.*"],
+        filters: { id: [req.params.id] },
+      });
+      parts = ticketWithParts?.[0]?.product_variant || [];
+    } catch (err2) {
+      // both failed, which means the link isn't established properly in query graph graph, return empty parts.
+    }
   }
 
   res.json({
