@@ -1,22 +1,22 @@
-import { defineWidgetConfig } from "@medusajs/admin-sdk"
-import { Container, Heading, Badge, Text } from "@medusajs/ui"
-import { useEffect, useState } from "react"
+import { defineWidgetConfig } from "@medusajs/admin-sdk";
+import { Container, Heading, Badge, Text } from "@medusajs/ui";
+import { useEffect, useState } from "react";
 
 type RepairTicket = {
-  id: string
-  ticket_number: string
-  status: string
-  technician_id?: string
-  technician_name?: string
-  issue_description: string
-  total_estimate: number
-  estimated_completion?: string
-  warranty_expiry?: string
-}
+  id: string;
+  ticket_number: string;
+  status: string;
+  technician_id?: string;
+  technician_name?: string;
+  issue_description: string;
+  total_estimate: number;
+  estimated_completion?: string;
+  warranty_expiry?: string;
+};
 
 const RepairTicketWidget = () => {
-  const [tickets, setTickets] = useState<RepairTicket[]>([])
-  const [loading, setLoading] = useState(true)
+  const [tickets, setTickets] = useState<RepairTicket[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch(`/admin/repairs`, {
@@ -24,30 +24,35 @@ const RepairTicketWidget = () => {
     })
       .then((res) => res.json())
       .then((data) => {
-        setTickets(data.repair_tickets || [])
-        setLoading(false)
+        setTickets(data.repair_tickets || []);
+        setLoading(false);
       })
       .catch((err) => {
-        console.error("Failed to load repair tickets:", err)
-        setLoading(false)
-      })
-  }, [])
+        console.error("Failed to load repair tickets:", err);
+        setLoading(false);
+      });
+  }, []);
 
   const getStatusColor = (status: string) => {
-    const colors: Record<string, "grey" | "blue" | "orange" | "green" | "red"> = {
-      received: "grey",
-      diagnosing: "blue",
-      awaiting_approval: "orange",
-      repairing: "blue",
-      ready: "green",
-      completed: "green",
-      cancelled: "red",
-    }
-    return colors[status] || "grey"
-  }
+    const colors: Record<string, "grey" | "blue" | "orange" | "green" | "red"> =
+      {
+        received: "grey",
+        diagnosing: "blue",
+        awaiting_approval: "orange",
+        repairing: "blue",
+        ready: "green",
+        completed: "green",
+        cancelled: "red",
+      };
+    return colors[status] || "grey";
+  };
 
   if (loading) {
-    return <Container className="divide-y p-0"><Text>Loading repairs...</Text></Container>
+    return (
+      <Container className="divide-y p-0">
+        <Text>Loading repairs...</Text>
+      </Container>
+    );
   }
 
   return (
@@ -61,7 +66,10 @@ const RepairTicketWidget = () => {
         ) : (
           <div className="space-y-3">
             {tickets.slice(0, 5).map((ticket) => (
-              <div key={ticket.id} className="flex items-start justify-between border-b pb-3 last:border-b-0">
+              <div
+                key={ticket.id}
+                className="flex items-start justify-between border-b pb-3 last:border-b-0"
+              >
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <Text className="font-medium">{ticket.ticket_number}</Text>
@@ -80,7 +88,10 @@ const RepairTicketWidget = () => {
                   </Text>
                   {ticket.estimated_completion && (
                     <Text size="xsmall" className="text-ui-fg-muted mt-1">
-                      ETC: {new Date(ticket.estimated_completion).toLocaleDateString()}
+                      ETC:{" "}
+                      {new Date(
+                        ticket.estimated_completion,
+                      ).toLocaleDateString()}
                     </Text>
                   )}
                 </div>
@@ -95,11 +106,11 @@ const RepairTicketWidget = () => {
         )}
       </div>
     </Container>
-  )
-}
+  );
+};
 
 export const config = defineWidgetConfig({
-  zone: "order.details.before",
-})
+  zone: "customer.details.before",
+});
 
-export default RepairTicketWidget
+export default RepairTicketWidget;

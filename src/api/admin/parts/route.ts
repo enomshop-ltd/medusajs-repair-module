@@ -1,21 +1,15 @@
-import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
+import { ContainerRegistrationKeys } from "@medusajs/framework/utils";
 
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
-  const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
+  const query = req.scope.resolve(ContainerRegistrationKeys.QUERY);
 
   const { data, metadata } = await query.graph({
     entity: "product_variant",
-    fields: [
-      "id",
-      "title",
-      "sku",
-      "product.title",
-      "prices.*",
-    ],
+    fields: ["id", "title", "sku", "product.title", "prices.*"],
     filters: req.filterableFields,
     pagination: req.queryConfig?.pagination,
-  })
+  });
 
   // Format nicely as parts with B2B pricing
   const formattedParts = data.map((variant: any) => {
@@ -24,7 +18,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     if (variant.prices && variant.prices.length > 0) {
       price = variant.prices[0].amount;
     }
-    
+
     return {
       id: variant.id,
       title: variant.title,
@@ -32,11 +26,11 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       sku: variant.sku,
       price: price,
       is_b2b_price: true,
-    }
-  })
+    };
+  });
 
   res.json({
     parts: formattedParts,
     ...metadata,
-  })
+  });
 }

@@ -138,7 +138,7 @@ export default function OrderConfirmation({
                         <span style={styles.strikethrough}>
                           {formatCurrency(
                             item.compare_at_unit_price,
-                            currencyCode
+                            currencyCode,
                           )}
                         </span>{" "}
                       </>
@@ -211,13 +211,9 @@ export default function OrderConfirmation({
               <Text style={styles.text}>
                 {shippingAddress.first_name} {shippingAddress.last_name}
               </Text>
-              <Text style={styles.text}>
-                {shippingAddress.address_1}
-              </Text>
+              <Text style={styles.text}>{shippingAddress.address_1}</Text>
               {shippingAddress.address_2 && (
-                <Text style={styles.text}>
-                  {shippingAddress.address_2}
-                </Text>
+                <Text style={styles.text}>{shippingAddress.address_2}</Text>
               )}
               <Text style={styles.text}>
                 {shippingAddress.postal_code} {shippingAddress.city}

@@ -1,107 +1,127 @@
-import { defineRouteConfig } from "@medusajs/admin-sdk"
-import { 
-  Container, 
-  Heading, 
-  Badge, 
-  Button, 
-  Text, 
+import { defineRouteConfig } from "@medusajs/admin-sdk";
+import {
+  Container,
+  Heading,
+  Badge,
+  Button,
+  Text,
   Label,
   Textarea,
   Input,
   Select,
   Toaster,
   toast,
-} from "@medusajs/ui"
-import { useEffect, useState } from "react"
-import { ArrowUpRightOnBox, ChatBubbleLeftRight } from "@medusajs/icons"
+} from "@medusajs/ui";
+import { useEffect, useState } from "react";
+import { ArrowUpRightOnBox, ChatBubbleLeftRight } from "@medusajs/icons";
 
 // Get id from URL path
 const useParams = () => {
-  const path = window.location.pathname
-  const parts = path.split('/')
-  const id = parts[parts.length - 1]
-  return { id }
-}
+  const path = window.location.pathname;
+  const parts = path.split("/");
+  const id = parts[parts.length - 1];
+  return { id };
+};
 
 type RepairTicket = {
-  id: string
-  ticket_number: string
-  status: string
-  technician_id?: string
-  technician_name?: string
-  issue_description: string
-  accessories?: string
-  parts_estimate: number
-  labor_estimate: number
-  total_estimate: number
-  parts_actual: number
-  labor_actual: number
-  total_actual: number
-  is_approved: boolean
-  approved_at?: string
-  warranty_months: number
-  warranty_expiry?: string
-  estimated_completion?: string
-  completed_at?: string
-  collected_at?: string
-  created_at: string
+  id: string;
+  ticket_number: string;
+  status: string;
+  technician_id?: string;
+  technician_name?: string;
+  issue_description: string;
+  accessories?: string;
+  parts_estimate: number;
+  labor_estimate: number;
+  total_estimate: number;
+  parts_actual: number;
+  labor_actual: number;
+  total_actual: number;
+  is_approved: boolean;
+  approved_at?: string;
+  warranty_months: number;
+  warranty_expiry?: string;
+  estimated_completion?: string;
+  completed_at?: string;
+  collected_at?: string;
+  created_at: string;
+  terms_accepted?: boolean;
+  data_wiped_consent?: boolean;
   device?: {
-    serial_number: string
-    model_name: string
-    brand: string
-  }
+    serial_number: string;
+    model_name: string;
+    brand: string;
+  };
+  parts?: Array<{
+    id: string;
+    title: string;
+    sku?: string;
+  }>;
+  custom_parts?: Array<{
+    name: string;
+    price: number;
+  }>;
   media?: Array<{
-    id: string
-    file_url: string
-    file_type: string
-    created_at: string
-  }>
+    id: string;
+    file_url: string;
+    file_type: string;
+    created_at: string;
+  }>;
   notes?: Array<{
-    id: string
-    content: string
-    is_internal: boolean
-    created_at: string
-  }>
+    id: string;
+    content: string;
+    is_internal: boolean;
+    created_at: string;
+  }>;
   updates?: Array<{
-    id: string
-    message: string
-    sender_type: string
-    sender_id?: string
-    created_at: string
-  }>
-}
+    id: string;
+    message: string;
+    sender_type: string;
+    sender_id?: string;
+    created_at: string;
+  }>;
+};
 
 const RepairDetailPage = () => {
-  const { id } = useParams<{ id: string }>()
-  const [ticket, setTicket] = useState<RepairTicket | null>(null)
-  const [loading, setLoading] = useState(true)
-  
+  const { id } = useParams<{ id: string }>();
+  const [ticket, setTicket] = useState<RepairTicket | null>(null);
+  const [loading, setLoading] = useState(true);
+
   // Form states
-  const [newStatus, setNewStatus] = useState("")
-  const [newNote, setNewNote] = useState("")
-  const [isInternal, setIsInternal] = useState(false)
-  const [newMessage, setNewMessage] = useState("")
-  const [technicianName, setTechnicianName] = useState("")
-  const [laborCost, setLaborCost] = useState("")
-  const [etc, setEtc] = useState("")
+  const [newStatus, setNewStatus] = useState("");
+  const [newNote, setNewNote] = useState("");
+  const [isInternal, setIsInternal] = useState(false);
+  const [newMessage, setNewMessage] = useState("");
+  const [technicianName, setTechnicianName] = useState("");
+  const [laborCost, setLaborCost] = useState("");
+  const [etc, setEtc] = useState("");
+
+  // Parts states
+  const [inventoryParts, setInventoryParts] = useState<any[]>([]);
+  const [selectedInventoryPart, setSelectedInventoryPart] =
+    useState<string>("");
+  const [isAddingPart, setIsAddingPart] = useState(false);
+  const [customPartName, setCustomPartName] = useState("");
+  const [customPartPrice, setCustomPartPrice] = useState("");
 
   const loadTicket = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const res = await fetch(`/admin/repairs/${id}`, {
         credentials: "include",
-      })
-      const data = await res.json()
-      
+      });
+      const data = await res.json();
+
       if (!res.ok) {
-        throw new Error(data.message || "Failed to fetch ticket")
+        throw new Error(data.message || "Failed to fetch ticket");
       }
-      
+
       const t = data.repair_ticket;
-      
+
       // Handle BigNumber serialization correctly which can be an object or string
       const parseNum = (val: any) => {
-        if (typeof val === 'object' && val !== null && 'value' in val) return Number(val.value);
+        if (typeof val === "object" && val !== null && "value" in val)
+          return Number(val.value);
         if (val !== undefined) return Number(val);
         return 0;
       };
@@ -112,26 +132,44 @@ const RepairDetailPage = () => {
       t.labor_actual = parseNum(t.labor_actual);
       t.parts_actual = parseNum(t.parts_actual);
       t.total_actual = parseNum(t.total_actual);
+      t.custom_parts = t.custom_parts || [];
 
-      setTicket(t)
-      setNewStatus(t.status)
-      setTechnicianName(t.technician_name || "")
-      
-      setLaborCost((t.labor_estimate / 100).toFixed(2))
-      
-      setEtc(t.estimated_completion ? t.estimated_completion.split("T")[0] : "")
+      setTicket(t);
+      setNewStatus(t.status);
+      setTechnicianName(t.technician_name || "");
+
+      setLaborCost((t.labor_estimate / 100).toFixed(2));
+
+      setEtc(
+        t.estimated_completion ? t.estimated_completion.split("T")[0] : "",
+      );
+
+      // load inventory parts for selection
+      loadInventoryParts();
     } catch (err) {
-      console.error("Failed to load repair ticket:", err)
+      console.error("Failed to load repair ticket:", err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
+
+  const loadInventoryParts = async () => {
+    try {
+      const res = await fetch(`/admin/parts`, {
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setInventoryParts(data.parts || []);
+      }
+    } catch (err) {}
+  };
 
   useEffect(() => {
     if (id) {
-      loadTicket()
+      loadTicket();
     }
-  }, [id])
+  }, [id]);
 
   const handleUpdateStatus = async () => {
     try {
@@ -140,93 +178,149 @@ const RepairDetailPage = () => {
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
-      })
-      toast.success("Status updated")
-      loadTicket()
+      });
+      toast.success("Status updated");
+      loadTicket();
     } catch (err) {
-      toast.error("Failed to update status")
+      toast.error("Failed to update status");
     }
-  }
+  };
+
+  const handleAddInventoryPart = async () => {
+    if (!selectedInventoryPart) return;
+    try {
+      setIsAddingPart(true);
+      await fetch(`/admin/repairs/${id}/parts`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ variant_ids: [selectedInventoryPart] }),
+      });
+      toast.success("Inventory part added");
+      setSelectedInventoryPart("");
+      loadTicket();
+    } catch (err) {
+      toast.error("Failed to add part");
+    } finally {
+      setIsAddingPart(false);
+    }
+  };
+
+  const handleAddCustomPart = async () => {
+    if (!customPartName || customPartPrice === "") return;
+    try {
+      setIsAddingPart(true);
+      await fetch(`/admin/repairs/${id}/custom-parts`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: customPartName,
+          price: Number(customPartPrice),
+        }),
+      });
+      toast.success("Custom part added");
+      setCustomPartName("");
+      setCustomPartPrice("");
+      loadTicket();
+    } catch (err) {
+      toast.error("Failed to add custom part");
+    } finally {
+      setIsAddingPart(false);
+    }
+  };
 
   const handleAddNote = async () => {
-    if (!newNote.trim()) return
+    if (!newNote.trim()) return;
     try {
       await fetch(`/admin/repairs/${id}/notes`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: newNote, is_internal: isInternal }),
-      })
-      toast.success("Note added")
-      setNewNote("")
-      loadTicket()
+      });
+      toast.success("Note added");
+      setNewNote("");
+      loadTicket();
     } catch (err) {
-      toast.error("Failed to add note")
+      toast.error("Failed to add note");
     }
-  }
+  };
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim()) return
+    if (!newMessage.trim()) return;
     try {
       await fetch(`/admin/repairs/${id}/messages`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: newMessage, sender_type: "technician" }),
-      })
-      toast.success("Message sent")
-      setNewMessage("")
-      loadTicket()
+        body: JSON.stringify({
+          message: newMessage,
+          sender_type: "technician",
+        }),
+      });
+      toast.success("Message sent");
+      setNewMessage("");
+      loadTicket();
     } catch (err) {
-      toast.error("Failed to send message")
+      toast.error("Failed to send message");
     }
-  }
+  };
 
   const handleUpdateCosts = async () => {
     try {
-      const laborAmount = Math.round(parseFloat(laborCost) * 100)
+      const laborAmount = Math.round(parseFloat(laborCost) * 100);
       await fetch(`/admin/repairs/${id}/costs`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           labor_estimate: laborAmount,
           estimated_completion: etc ? new Date(etc).toISOString() : null,
           technician_name: technicianName || null,
         }),
-      })
-      toast.success("Details updated")
-      loadTicket()
+      });
+      toast.success("Details updated");
+      loadTicket();
     } catch (err) {
-      toast.error("Failed to update details")
+      toast.error("Failed to update details");
     }
-  }
+  };
 
   const getStatusColor = (status: string) => {
-    const colors: Record<string, "grey" | "blue" | "orange" | "green" | "red"> = {
-      received: "grey",
-      diagnosing: "blue",
-      awaiting_approval: "orange",
-      repairing: "blue",
-      ready: "green",
-      completed: "green",
-      cancelled: "red",
-    }
-    return colors[status] || "grey"
-  }
+    const colors: Record<string, "grey" | "blue" | "orange" | "green" | "red"> =
+      {
+        received: "grey",
+        diagnosing: "blue",
+        awaiting_approval: "orange",
+        repairing: "blue",
+        ready: "green",
+        completed: "green",
+        cancelled: "red",
+      };
+    return colors[status] || "grey";
+  };
 
   if (loading) {
-    return <Container><Text>Loading repair ticket...</Text></Container>
+    return (
+      <Container>
+        <Text>Loading repair ticket...</Text>
+      </Container>
+    );
   }
 
   if (!ticket) {
-    return <Container><Text>Repair ticket not found</Text></Container>
+    return (
+      <Container>
+        <Text>Repair ticket not found</Text>
+      </Container>
+    );
   }
 
   return (
     <div className="space-y-6">
       <Toaster />
-      
+
       {/* Header */}
       <Container>
         <div className="flex items-start justify-between">
@@ -237,20 +331,35 @@ const RepairDetailPage = () => {
                 {ticket.status.replace("_", " ")}
               </Badge>
               {ticket.technician_name && (
-                <Badge color="purple">
-                  {ticket.technician_name}
-                </Badge>
+                <Badge color="purple">{ticket.technician_name}</Badge>
               )}
             </div>
             {ticket.device && (
               <Text className="text-ui-fg-subtle mt-2">
-                {ticket.device.brand} {ticket.device.model_name} - S/N: {ticket.device.serial_number}
+                {ticket.device.brand} {ticket.device.model_name} - S/N:{" "}
+                {ticket.device.serial_number}
               </Text>
             )}
           </div>
-          <a href="/app/repairs">
-            <Button variant="secondary">Back to List</Button>
-          </a>
+          <div className="flex items-center gap-2">
+            <a
+              href={`/admin/repairs/${id}/document?type=job_card`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button variant="secondary">Print Job Card</Button>
+            </a>
+            <a
+              href={`/admin/repairs/${id}/document?type=receipt`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button variant="secondary">Print Receipt</Button>
+            </a>
+            <a href="/app/repairs">
+              <Button variant="secondary">Back to List</Button>
+            </a>
+          </div>
         </div>
       </Container>
 
@@ -259,7 +368,9 @@ const RepairDetailPage = () => {
         <div className="space-y-6">
           {/* Issue Details */}
           <Container>
-            <Heading level="h2" className="mb-4">Issue Details</Heading>
+            <Heading level="h2" className="mb-4">
+              Issue Details
+            </Heading>
             <div className="space-y-3">
               <div>
                 <Label>Description</Label>
@@ -275,20 +386,44 @@ const RepairDetailPage = () => {
                 <Label>Created</Label>
                 <Text>{new Date(ticket.created_at).toLocaleString()}</Text>
               </div>
+              <div className="pt-3 border-t">
+                <Label>Legal & Compliance</Label>
+                <div className="flex flex-col gap-2 mt-2">
+                  <Badge
+                    color={ticket.terms_accepted ? "green" : "red"}
+                    size="small"
+                  >
+                    Terms {ticket.terms_accepted ? "Accepted" : "Not Accepted"}
+                  </Badge>
+                  <Badge
+                    color={ticket.data_wiped_consent ? "green" : "grey"}
+                    size="small"
+                  >
+                    Data Wipe{" "}
+                    {ticket.data_wiped_consent ? "Consented" : "Not Consented"}
+                  </Badge>
+                </div>
+              </div>
             </div>
           </Container>
 
           {/* Cost Breakdown */}
           <Container>
-            <Heading level="h2" className="mb-4">Cost Breakdown</Heading>
+            <Heading level="h2" className="mb-4">
+              Cost Breakdown
+            </Heading>
             <div className="space-y-2">
               <div className="flex justify-between">
                 <Text>Parts Estimate:</Text>
-                <Text className="font-medium">${(ticket.parts_estimate / 100).toFixed(2)}</Text>
+                <Text className="font-medium">
+                  ${(ticket.parts_estimate / 100).toFixed(2)}
+                </Text>
               </div>
               <div className="flex justify-between">
                 <Text>Labor Estimate:</Text>
-                <Text className="font-medium">${(ticket.labor_estimate / 100).toFixed(2)}</Text>
+                <Text className="font-medium">
+                  ${(ticket.labor_estimate / 100).toFixed(2)}
+                </Text>
               </div>
               <div className="flex justify-between text-lg font-semibold border-t pt-2">
                 <Text>Total Estimate:</Text>
@@ -296,7 +431,8 @@ const RepairDetailPage = () => {
               </div>
               {ticket.is_approved && (
                 <Badge color="green" size="small" className="mt-2">
-                  Approved on {new Date(ticket.approved_at!).toLocaleDateString()}
+                  Approved on{" "}
+                  {new Date(ticket.approved_at!).toLocaleDateString()}
                 </Badge>
               )}
             </div>
@@ -305,7 +441,9 @@ const RepairDetailPage = () => {
           {/* Media */}
           {ticket.media && ticket.media.length > 0 && (
             <Container>
-              <Heading level="h2" className="mb-4">Media</Heading>
+              <Heading level="h2" className="mb-4">
+                Media
+              </Heading>
               <div className="grid grid-cols-2 gap-3">
                 {ticket.media.map((media) => (
                   <a
@@ -320,7 +458,10 @@ const RepairDetailPage = () => {
                       alt="Repair media"
                       className="w-full h-full object-cover"
                     />
-                    <ArrowUpRightOnBox className="absolute top-2 right-2 text-white" size={16} />
+                    <ArrowUpRightOnBox
+                      className="absolute top-2 right-2 text-white"
+                      size={16}
+                    />
                   </a>
                 ))}
               </div>
@@ -332,7 +473,9 @@ const RepairDetailPage = () => {
         <div className="space-y-6">
           {/* Update Status */}
           <Container>
-            <Heading level="h2" className="mb-4">Update Details</Heading>
+            <Heading level="h2" className="mb-4">
+              Update Details
+            </Heading>
             <div className="space-y-4">
               <div>
                 <Label>Technician</Label>
@@ -351,7 +494,9 @@ const RepairDetailPage = () => {
                   <Select.Content>
                     <Select.Item value="received">Received</Select.Item>
                     <Select.Item value="diagnosing">Diagnosing</Select.Item>
-                    <Select.Item value="awaiting_approval">Awaiting Approval</Select.Item>
+                    <Select.Item value="awaiting_approval">
+                      Awaiting Approval
+                    </Select.Item>
                     <Select.Item value="repairing">Repairing</Select.Item>
                     <Select.Item value="ready">Ready</Select.Item>
                     <Select.Item value="completed">Completed</Select.Item>
@@ -378,10 +523,18 @@ const RepairDetailPage = () => {
                 />
               </div>
               <div className="flex gap-2">
-                <Button onClick={handleUpdateStatus} variant="secondary" className="flex-1">
+                <Button
+                  onClick={handleUpdateStatus}
+                  variant="secondary"
+                  className="flex-1"
+                >
                   Update Status
                 </Button>
-                <Button onClick={handleUpdateCosts} variant="primary" className="flex-1">
+                <Button
+                  onClick={handleUpdateCosts}
+                  variant="primary"
+                  className="flex-1"
+                >
                   Save Details
                 </Button>
               </div>
@@ -390,7 +543,9 @@ const RepairDetailPage = () => {
 
           {/* Notes */}
           <Container>
-            <Heading level="h2" className="mb-4">Internal Notes</Heading>
+            <Heading level="h2" className="mb-4">
+              Internal Notes
+            </Heading>
             <div className="space-y-3">
               <Textarea
                 value={newNote}
@@ -405,18 +560,30 @@ const RepairDetailPage = () => {
                   checked={isInternal}
                   onChange={(e) => setIsInternal(e.target.checked)}
                 />
-                <Label htmlFor="internal">Internal only (not visible to customer)</Label>
+                <Label htmlFor="internal">
+                  Internal only (not visible to customer)
+                </Label>
               </div>
-              <Button onClick={handleAddNote} variant="secondary" className="w-full">
+              <Button
+                onClick={handleAddNote}
+                variant="secondary"
+                className="w-full"
+              >
                 Add Note
               </Button>
-              
+
               {ticket.notes && ticket.notes.length > 0 && (
                 <div className="mt-4 space-y-2 max-h-64 overflow-y-auto">
                   {ticket.notes.map((note) => (
-                    <div key={note.id} className="p-3 bg-ui-bg-subtle rounded border">
+                    <div
+                      key={note.id}
+                      className="p-3 bg-ui-bg-subtle rounded border"
+                    >
                       <div className="flex items-center justify-between mb-1">
-                        <Badge color={note.is_internal ? "orange" : "blue"} size="small">
+                        <Badge
+                          color={note.is_internal ? "orange" : "blue"}
+                          size="small"
+                        >
                           {note.is_internal ? "Internal" : "Customer Visible"}
                         </Badge>
                         <Text size="xsmall" className="text-ui-fg-muted">
@@ -451,7 +618,9 @@ const RepairDetailPage = () => {
                     >
                       <div className="flex items-center justify-between mb-1">
                         <Badge size="small">
-                          {update.sender_type === "customer" ? "Customer" : "Technician"}
+                          {update.sender_type === "customer"
+                            ? "Customer"
+                            : "Technician"}
                         </Badge>
                         <Text size="xsmall" className="text-ui-fg-muted">
                           {new Date(update.created_at).toLocaleString()}
@@ -462,14 +631,18 @@ const RepairDetailPage = () => {
                   ))}
                 </div>
               )}
-              
+
               <Textarea
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Type a message to customer..."
                 rows={2}
               />
-              <Button onClick={handleSendMessage} variant="primary" className="w-full">
+              <Button
+                onClick={handleSendMessage}
+                variant="primary"
+                className="w-full"
+              >
                 Send Message
               </Button>
             </div>
@@ -477,11 +650,11 @@ const RepairDetailPage = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
 export const config = defineRouteConfig({
   label: "Repair Detail",
-})
+});
 
-export default RepairDetailPage
+export default RepairDetailPage;
