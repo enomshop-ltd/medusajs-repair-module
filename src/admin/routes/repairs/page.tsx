@@ -23,7 +23,7 @@ const RepairsPage = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [newDevice, setNewDevice] = useState({ serial_number: "", model_name: "", brand: "", customer_id: "", imei: "", condition: "" })
-  const [newTicket, setNewTicket] = useState({ customer_id: "", issue_description: "", accessories: "" })
+  const [newTicket, setNewTicket] = useState({ customer_id: "", issue_description: "", accessories: "", technician_name: "" })
   
   const [customers, setCustomers] = useState<any[]>([])
   const [loadingCustomers, setLoadingCustomers] = useState(false)
@@ -84,6 +84,7 @@ const RepairsPage = () => {
           ticket: {
             customer_id: newTicket.customer_id || undefined,
             issue_description: newTicket.issue_description,
+            technician_name: newTicket.technician_name || undefined,
             accessories: newTicket.accessories || undefined,
           }
         }),
@@ -97,7 +98,7 @@ const RepairsPage = () => {
       
       setCreateModalOpen(false)
       setNewDevice({ serial_number: "", model_name: "", brand: "", customer_id: "", imei: "", condition: "" })
-      setNewTicket({ customer_id: "", issue_description: "", accessories: "" })
+      setNewTicket({ customer_id: "", issue_description: "", accessories: "", technician_name: "" })
       loadTickets()
     } catch (err) {
       console.error(err)
@@ -120,7 +121,18 @@ const RepairsPage = () => {
     return colors[status] || "grey"
   }
 
-  const filteredTickets = tickets.filter((ticket) => {
+  const filteredTickets = tickets.map(ticket => {
+    // Handle BigNumber parsing
+    const parseNum = (val: any) => {
+        if (typeof val === 'object' && val !== null && 'value' in val) return Number(val.value);
+        if (val !== undefined) return Number(val);
+        return 0;
+    };
+    return {
+        ...ticket,
+        total_estimate: parseNum(ticket.total_estimate)
+    };
+  }).filter((ticket) => {
     const matchesSearch = 
       ticket.ticket_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ticket.issue_description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -203,6 +215,10 @@ const RepairsPage = () => {
                     <div className="flex flex-col gap-y-2">
                       <Label htmlFor="issue_description">Issue Description *</Label>
                       <Textarea id="issue_description" value={newTicket.issue_description} onChange={(e) => setNewTicket({...newTicket, issue_description: e.target.value})} placeholder="Screen is cracked and battery draining fast." />
+                    </div>
+                    <div className="flex flex-col gap-y-2">
+                       <Label htmlFor="technician_name">Assign Technician</Label>
+                       <Input id="technician_name" value={newTicket.technician_name} onChange={(e) => setNewTicket({...newTicket, technician_name: e.target.value})} placeholder="e.g. John Doe" />
                     </div>
                     <div className="flex flex-col gap-y-2">
                       <Label htmlFor="accessories">Accessories Included</Label>

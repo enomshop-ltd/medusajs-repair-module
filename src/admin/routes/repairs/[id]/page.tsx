@@ -85,24 +85,46 @@ const RepairDetailPage = () => {
   const [laborCost, setLaborCost] = useState("")
   const [etc, setEtc] = useState("")
 
-  const loadTicket = () => {
-    setLoading(true)
-    fetch(`/admin/repairs/${id}`, {
-      credentials: "include",
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setTicket(data.repair_ticket)
-        setNewStatus(data.repair_ticket.status)
-        setTechnicianName(data.repair_ticket.technician_name || "")
-        setLaborCost((data.repair_ticket.labor_estimate / 100).toFixed(2))
-        setEtc(data.repair_ticket.estimated_completion?.split("T")[0] || "")
-        setLoading(false)
+  const loadTicket = async () => {
+    try {
+      setLoading(true)
+      const res = await fetch(`/admin/repairs/${id}`, {
+        credentials: "include",
       })
-      .catch((err) => {
-        console.error("Failed to load repair ticket:", err)
-        setLoading(false)
-      })
+      const data = await res.json()
+      
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to fetch ticket")
+      }
+      
+      const t = data.repair_ticket;
+      
+      // Handle BigNumber serialization correctly which can be an object or string
+      const parseNum = (val: any) => {
+        if (typeof val === 'object' && val !== null && 'value' in val) return Number(val.value);
+        if (val !== undefined) return Number(val);
+        return 0;
+      };
+
+      t.labor_estimate = parseNum(t.labor_estimate);
+      t.parts_estimate = parseNum(t.parts_estimate);
+      t.total_estimate = parseNum(t.total_estimate);
+      t.labor_actual = parseNum(t.labor_actual);
+      t.parts_actual = parseNum(t.parts_actual);
+      t.total_actual = parseNum(t.total_actual);
+
+      setTicket(t)
+      setNewStatus(t.status)
+      setTechnicianName(t.technician_name || "")
+      
+      setLaborCost((t.labor_estimate / 100).toFixed(2))
+      
+      setEtc(t.estimated_completion ? t.estimated_completion.split("T")[0] : "")
+    } catch (err) {
+      console.error("Failed to load repair ticket:", err)
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {

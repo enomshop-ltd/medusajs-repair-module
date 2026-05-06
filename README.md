@@ -575,9 +575,10 @@ Technician badges appear:
    - Inserted upfront Estimate Cost inputs (Parts & Labor) when checking in a new device.
 2. **Workflow Upgrades:** Updated `create-repair-ticket-workflow` and module models to directly process incoming technician designations and initial estimates.
 3. **Admin UI Bugfixes:** 
-   - Fixed the "Repair ticket not found" error by hardening the `/admin/repairs/:id` GET endpoint to gracefully handle missing `product_variant` relations.
-   - Corrected BigNumber serialization errors in the browser when mapping `labor_estimate` and `parts_estimate` (supporting object structures `.value` directly).
-4. **Code Realignment:** Merged application source files to ensure everything is tightly localized within the `repair-module-main/src` module directory.
+   - Fixed the "Repair ticket not found" error by hardening the `/admin/repairs/:id` GET endpoint to gracefully handle missing `product_variant` relations and updating `id` filter parsing to use an array payload.
+   - Corrected BigNumber serialization errors in the browser when mapping `labor_estimate` and `parts_estimate` (supporting object structures `.value` directly) for both Detail page (`[id]/page.tsx`) and Dashboard List Table (`page.tsx`).
+4. **Price Groups:** Added `/admin/parts` endpoint enabling Price Groups B2B resolution on variants to act as assignable parts for repairs.
+5. **Code Realignment:** Merged application source files to ensure everything is tightly localized within the `repair-module-main/src` module directory.
 
 ## Recent Updates / Changelog (April 2026)
 

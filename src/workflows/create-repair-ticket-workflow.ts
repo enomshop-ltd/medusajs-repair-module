@@ -17,6 +17,7 @@ type CreateRepairTicketWorkflowInput = {
   ticket: {
     customer_id?: string
     issue_description: string
+    technician_name?: string
     accessories?: string
   }
 }
@@ -30,6 +31,7 @@ export const createRepairTicketWorkflow = createWorkflow(
       device_id: device.id,
       customer_id: input.ticket.customer_id,
       issue_description: input.ticket.issue_description,
+      technician_name: input.ticket.technician_name,
       accessories: input.ticket.accessories,
     })
 
