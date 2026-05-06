@@ -11,11 +11,12 @@ export default defineConfig({
   projectConfig: {
     // ... 
   },
-  modules: [
+  plugins: [
     {
       resolve: "@enomshop/repair-module",
-    }
-  ]
+      options: {}
+    },
+  ],
 })
 ```
 
