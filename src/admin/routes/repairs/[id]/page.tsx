@@ -13,7 +13,7 @@ import {
   toast,
 } from "@medusajs/ui";
 import { useEffect, useState } from "react";
-import { ArrowUpRightOnBox, ChatBubbleLeftRight, Trash, Bell } from "@medusajs/icons";
+import { ArrowUpRightOnBox, ChatBubbleLeftRight, Trash, BellAlert } from "@medusajs/icons";
 
 // Get id from URL path
 const useParams = () => {
@@ -412,7 +412,7 @@ const RepairDetailPage = () => {
               onClick={handleSendReminder}
               disabled={isSendingReminder}
             >
-              <Bell className="mr-1" /> Send Reminder
+              <BellAlert className="mr-1" /> Send Reminder
             </Button>
             <a href="/app/repairs">
               <Button variant="secondary">Back to List</Button>
