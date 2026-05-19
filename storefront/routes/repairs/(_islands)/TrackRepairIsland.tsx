@@ -458,12 +458,17 @@ export default function TrackRepairIsland({
                   submitBtn.disabled = true;
                   submitBtn.textContent = "Sending...";
 
+                  const bodyData: any = { message };
+                  if (initialToken) {
+                    bodyData.token = initialToken;
+                  }
+
                   const response = await fetch(
                     `${backendUrl}/store/repairs/${ticket.id}/messages`,
                     {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ message }),
+                      body: JSON.stringify(bodyData),
                       credentials: "omit",
                     },
                   );

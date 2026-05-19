@@ -3,6 +3,7 @@ import { z } from "@medusajs/framework/zod";
 
 const AddMessageSchema = z.object({
   message: z.string(),
+  token: z.string().optional(),
 });
 
 export const storeRepairMiddlewares: MiddlewareRoute[] = [
