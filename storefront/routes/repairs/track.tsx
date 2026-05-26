@@ -1,4 +1,4 @@
-import { Head } from "$fresh/runtime.ts";
+import { Head, Partial } from "fresh/runtime";
 import TrackRepairIsland from "./(_islands)/TrackRepairIsland.tsx";
 
 export default function TrackRepairRoute(req: Request) {
@@ -23,13 +23,16 @@ export default function TrackRepairRoute(req: Request) {
           property="og:description"
           content="Track your device repair ticket status."
         />
+        <meta name="view-transition" content="same-origin" />
       </Head>
-      <div class="route-container">
-        {/* Fresh 2.3+ partial injection placeholder if needed */}
-        <div f-client-nav>
-          <TrackRepairIsland backendUrl={backendUrl} initialToken={token} />
+      <Partial name="repair-content">
+        <div class="route-container" f-client-nav>
+          {/* Fresh 2.3+ partial injection placeholder if needed */}
+          <div>
+            <TrackRepairIsland backendUrl={backendUrl} initialToken={token} />
+          </div>
         </div>
-      </div>
+      </Partial>
     </>
   );
 }
