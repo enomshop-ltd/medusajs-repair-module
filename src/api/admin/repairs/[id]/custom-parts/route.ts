@@ -25,7 +25,8 @@ export async function POST(
     ? [...ticket.custom_parts]
     : [];
 
-  customParts.push({ name, price: Number(price) });
+  const priceInCents = Math.round(Number(price) * 100);
+  customParts.push({ name, price: priceInCents });
 
   // also update parts estimate
   const currentPartsEstimate =
@@ -42,8 +43,7 @@ export async function POST(
       ? Number((ticket.labor_estimate as any).value)
       : Number(ticket.labor_estimate);
 
-  const updatedPartsEstimate =
-    currentPartsEstimate + Math.round(Number(price) * 100);
+  const updatedPartsEstimate = currentPartsEstimate + priceInCents;
 
   const updatedTicket = await repairService.updateRepairTickets({
     id: req.params.id,

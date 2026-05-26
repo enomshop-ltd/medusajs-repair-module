@@ -1,6 +1,9 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
 import type { AuthenticatedMedusaRequest } from "@medusajs/framework/http";
-import { ContainerRegistrationKeys, MedusaError } from "@medusajs/framework/utils";
+import {
+  ContainerRegistrationKeys,
+  MedusaError,
+} from "@medusajs/framework/utils";
 import {
   createWorkflow,
   WorkflowResponse,
@@ -36,14 +39,20 @@ export async function GET(
   });
 
   if (!tickets || tickets.length === 0) {
-    throw new MedusaError(MedusaError.Types.NOT_FOUND, "Repair ticket not found");
+    throw new MedusaError(
+      MedusaError.Types.NOT_FOUND,
+      "Repair ticket not found",
+    );
   }
 
   const ticket = tickets[0];
 
   // Restrict to customer who owns the ticket (if customer_id is set)
   if (ticket.customer_id && ticket.customer_id !== customerId) {
-    throw new MedusaError(MedusaError.Types.UNAUTHORIZED, "Unauthorized to view these messages");
+    throw new MedusaError(
+      MedusaError.Types.UNAUTHORIZED,
+      "Unauthorized to view these messages",
+    );
   }
 
   const { data } = await query.graph({
@@ -77,7 +86,10 @@ export async function POST(
   });
 
   if (!tickets || tickets.length === 0) {
-    throw new MedusaError(MedusaError.Types.NOT_FOUND, "Repair ticket not found");
+    throw new MedusaError(
+      MedusaError.Types.NOT_FOUND,
+      "Repair ticket not found",
+    );
   }
 
   const ticket = tickets[0];
@@ -93,14 +105,17 @@ export async function POST(
     isAuthorized = true;
   }
 
-  // If ticket has no customer AND no token was provided, it might be an anonymous ticket. 
+  // If ticket has no customer AND no token was provided, it might be an anonymous ticket.
   // We'll allow it if customer_id is null, but ideally all tickets belong to a customer.
   if (!isAuthorized && !ticket.customer_id && !token) {
     isAuthorized = true;
   }
 
   if (!isAuthorized) {
-    throw new MedusaError(MedusaError.Types.UNAUTHORIZED, "Unauthorized to post messages");
+    throw new MedusaError(
+      MedusaError.Types.UNAUTHORIZED,
+      "Unauthorized to post messages",
+    );
   }
 
   const { result } = await addRepairUpdateWorkflow(req.scope).run({

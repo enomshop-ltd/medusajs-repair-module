@@ -19,6 +19,8 @@ const CreateRepairTicketSchema = z.object({
     customer_id: z.string().optional(),
     issue_description: z.string(),
     accessories: z.string().optional(),
+    terms_accepted: z.boolean().optional(),
+    data_wiped_consent: z.boolean().optional(),
   }),
 });
 

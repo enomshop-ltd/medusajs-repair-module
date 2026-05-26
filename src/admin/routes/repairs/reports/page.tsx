@@ -91,20 +91,52 @@ const ReportsPage = () => {
         </div>
       </div>
 
-      <div className="bg-ui-bg-base border border-ui-border-base rounded-lg p-6 shadow-sm h-96">
-        <Heading level="h2" className="mb-6">
-          Repairs by Status
-        </Heading>
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="count" fill="#8884d8" name="Tickets" />
-          </BarChart>
-        </ResponsiveContainer>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div className="bg-ui-bg-base border border-ui-border-base rounded-lg p-6 shadow-sm h-96">
+          <Heading level="h2" className="mb-6">
+            Repairs by Status
+          </Heading>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="count" fill="#8884d8" name="Tickets" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="bg-ui-bg-base border border-ui-border-base rounded-lg p-6 shadow-sm h-96">
+          <Heading level="h2" className="mb-6">
+            Revenue by Month (Parts vs Labor)
+          </Heading>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={data.monthly_revenue}
+              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip formatter={(value) => `$${Number(value).toFixed(2)}`} />
+              <Legend />
+              <Bar
+                dataKey="partsRevenue"
+                stackId="a"
+                fill="#82ca9d"
+                name="Parts Revenue"
+              />
+              <Bar
+                dataKey="laborRevenue"
+                stackId="a"
+                fill="#ffc658"
+                name="Labor Revenue"
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
     </Container>
   );

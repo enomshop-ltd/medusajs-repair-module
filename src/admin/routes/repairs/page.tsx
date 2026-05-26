@@ -49,7 +49,6 @@ const RepairsPage = () => {
   const [newTicket, setNewTicket] = useState({
     customer_id: "",
     issue_description: "",
-    technician_name: "",
     terms_accepted: false,
     data_wiped_consent: false,
   });
@@ -133,7 +132,6 @@ const RepairsPage = () => {
           ticket: {
             customer_id: newTicket.customer_id || undefined,
             issue_description: newTicket.issue_description,
-            technician_name: newTicket.technician_name || undefined,
             accessories:
               accessories.length > 0 ? accessories.join(", ") : undefined,
             terms_accepted: newTicket.terms_accepted,
@@ -160,7 +158,6 @@ const RepairsPage = () => {
       setNewTicket({
         customer_id: "",
         issue_description: "",
-        technician_name: "",
         terms_accepted: false,
         data_wiped_consent: false,
       });
@@ -378,20 +375,6 @@ const RepairsPage = () => {
                       />
                     </div>
                     <div className="flex flex-col gap-y-2">
-                      <Label htmlFor="technician_name">Assign Technician</Label>
-                      <Input
-                        id="technician_name"
-                        value={newTicket.technician_name}
-                        onChange={(e) =>
-                          setNewTicket({
-                            ...newTicket,
-                            technician_name: e.target.value,
-                          })
-                        }
-                        placeholder="e.g. John Doe"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-y-2">
                       <Label htmlFor="accessories">
                         Accessories Included (press comma to add)
                       </Label>
@@ -540,9 +523,7 @@ const RepairsPage = () => {
                 <Table.Cell className="max-w-xs truncate">
                   {ticket.issue_description}
                 </Table.Cell>
-                <Table.Cell>
-                  {formatCurrency(ticket.total_estimate)}
-                </Table.Cell>
+                <Table.Cell>{formatCurrency(ticket.total_estimate)}</Table.Cell>
                 <Table.Cell>
                   {new Date(ticket.created_at).toLocaleDateString()}
                 </Table.Cell>

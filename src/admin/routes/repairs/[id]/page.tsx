@@ -13,7 +13,12 @@ import {
   toast,
 } from "@medusajs/ui";
 import { useEffect, useState } from "react";
-import { ArrowUpRightOnBox, ChatBubbleLeftRight, Trash, BellAlert } from "@medusajs/icons";
+import {
+  ArrowUpRightOnBox,
+  ChatBubbleLeftRight,
+  Trash,
+  BellAlert,
+} from "@medusajs/icons";
 import { useStoreCurrency } from "../../../lib/use-store-currency";
 
 // Get id from URL path
@@ -92,7 +97,9 @@ const RepairDetailPage = () => {
   // Form states
   const [newStatus, setNewStatus] = useState("");
   const [unifiedMessage, setUnifiedMessage] = useState("");
-  const [messageType, setMessageType] = useState<"chat" | "internal_note" | "public_note">("chat");
+  const [messageType, setMessageType] = useState<
+    "chat" | "internal_note" | "public_note"
+  >("chat");
   const [technicianName, setTechnicianName] = useState("");
   const [laborCost, setLaborCost] = useState("");
   const [etc, setEtc] = useState("");
@@ -409,15 +416,42 @@ const RepairDetailPage = () => {
             )}
           </div>
           <div className="flex items-center gap-2">
+            <a
+              href={`/api/admin/repairs/${id}/document?type=quote`}
+              target="_blank"
+            >
+              <Button variant="secondary" size="small">
+                Quote PDF
+              </Button>
+            </a>
+            <a
+              href={`/api/admin/repairs/${id}/document?type=invoice`}
+              target="_blank"
+            >
+              <Button variant="secondary" size="small">
+                Invoice PDF
+              </Button>
+            </a>
+            <a
+              href={`/api/admin/repairs/${id}/document?type=job_card`}
+              target="_blank"
+            >
+              <Button variant="secondary" size="small">
+                Job Card
+              </Button>
+            </a>
             <Button
               variant="secondary"
+              size="small"
               onClick={handleSendReminder}
               disabled={isSendingReminder}
             >
-              <BellAlert className="mr-1" /> Send Reminder
+              <BellAlert className="mr-1" /> Reminder
             </Button>
             <a href="/app/repairs">
-              <Button variant="secondary">Back to List</Button>
+              <Button variant="secondary" size="small">
+                Back
+              </Button>
             </a>
           </div>
         </div>
@@ -723,39 +757,66 @@ const RepairDetailPage = () => {
               <ChatBubbleLeftRight size={20} />
               <Heading level="h2">Timeline & Communication</Heading>
             </div>
-            
+
             <div className="space-y-4">
               <div className="space-y-2 max-h-80 overflow-y-auto mb-4 border rounded bg-ui-bg-subtle/50 p-2">
                 {(() => {
                   const items = [
-                    ...((ticket.notes || []) as any[]).map((n) => ({ ...n, entryType: "note" })),
-                    ...((ticket.updates || []) as any[]).map((u) => ({ ...u, entryType: "update" })),
+                    ...((ticket.notes || []) as any[]).map((n) => ({
+                      ...n,
+                      entryType: "note",
+                    })),
+                    ...((ticket.updates || []) as any[]).map((u) => ({
+                      ...u,
+                      entryType: "update",
+                    })),
                   ].sort(
                     (a, b) =>
                       new Date(a.created_at).getTime() -
                       new Date(b.created_at).getTime(),
                   );
-                  
+
                   if (items.length === 0) {
-                    return <Text className="text-ui-fg-muted p-2 text-center text-sm">No activity yet.</Text>;
+                    return (
+                      <Text className="text-ui-fg-muted p-2 text-center text-sm">
+                        No activity yet.
+                      </Text>
+                    );
                   }
 
                   return items.map((item) => (
                     <div
                       key={`${item.entryType}_${item.id}`}
                       className={`p-3 rounded border bg-ui-bg-base ${
-                        item.entryType === "update" && item.author_type !== "customer" ? "ml-8" : 
-                        item.entryType === "update" && item.author_type === "customer" ? "mr-8" : ""
+                        item.entryType === "update" &&
+                        item.author_type !== "customer"
+                          ? "ml-8"
+                          : item.entryType === "update" &&
+                              item.author_type === "customer"
+                            ? "mr-8"
+                            : ""
                       }`}
                     >
                       <div className="flex items-center justify-between mb-2">
                         {item.entryType === "note" ? (
-                          <Badge color={item.is_internal ? "orange" : "blue"} size="small">
+                          <Badge
+                            color={item.is_internal ? "orange" : "blue"}
+                            size="small"
+                          >
                             {item.is_internal ? "Internal Note" : "Public Note"}
                           </Badge>
                         ) : (
-                          <Badge color={item.author_type === "customer" ? "green" : "purple"} size="small">
-                            {item.author_type === "customer" ? "Customer Msg" : "Technician Msg"}
+                          <Badge
+                            color={
+                              item.author_type === "customer"
+                                ? "green"
+                                : "purple"
+                            }
+                            size="small"
+                          >
+                            {item.author_type === "customer"
+                              ? "Customer Msg"
+                              : "Technician Msg"}
                           </Badge>
                         )}
                         <Text size="xsmall" className="text-ui-fg-muted">
@@ -763,7 +824,9 @@ const RepairDetailPage = () => {
                         </Text>
                       </div>
                       <Text size="small" className="whitespace-pre-wrap">
-                        {item.entryType === "note" ? item.content : item.message}
+                        {item.entryType === "note"
+                          ? item.content
+                          : item.message}
                       </Text>
                     </div>
                   ));
@@ -779,13 +842,18 @@ const RepairDetailPage = () => {
                   className="bg-ui-bg-base"
                 />
                 <div className="flex items-center gap-2 mt-2">
-                  <Select value={messageType} onValueChange={(val: any) => setMessageType(val)}>
+                  <Select
+                    value={messageType}
+                    onValueChange={(val: any) => setMessageType(val)}
+                  >
                     <Select.Trigger className="w-[180px] bg-ui-bg-base">
                       <Select.Value />
                     </Select.Trigger>
                     <Select.Content>
                       <Select.Item value="chat">Message Customer</Select.Item>
-                      <Select.Item value="internal_note">Internal Note</Select.Item>
+                      <Select.Item value="internal_note">
+                        Internal Note
+                      </Select.Item>
                       <Select.Item value="public_note">Public Note</Select.Item>
                     </Select.Content>
                   </Select>

@@ -13,7 +13,9 @@ export const useStoreCurrency = () => {
           if (store.default_currency_code) {
             setCurrencyCode(store.default_currency_code.toUpperCase());
           } else if (store.supported_currencies?.length > 0) {
-            const defaultCurrency = store.supported_currencies.find((c: any) => c.is_default) || store.supported_currencies[0];
+            const defaultCurrency =
+              store.supported_currencies.find((c: any) => c.is_default) ||
+              store.supported_currencies[0];
             if (defaultCurrency?.currency_code) {
               setCurrencyCode(defaultCurrency.currency_code.toUpperCase());
             }

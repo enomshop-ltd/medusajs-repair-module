@@ -1,4 +1,8 @@
-import type { AuthenticatedMedusaRequest, MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
+import type {
+  AuthenticatedMedusaRequest,
+  MedusaRequest,
+  MedusaResponse,
+} from "@medusajs/framework/http";
 import {
   ContainerRegistrationKeys,
   MedusaError,
@@ -17,7 +21,7 @@ export async function POST(
   const customerId = req.auth_context?.actor_id;
 
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY);
-  
+
   // Fetch the ticket to verify ownership
   const { data: tickets } = await query.graph({
     entity: "repair_ticket",
@@ -26,21 +30,33 @@ export async function POST(
   });
 
   if (!tickets || tickets.length === 0) {
-    throw new MedusaError(MedusaError.Types.NOT_FOUND, "Repair ticket not found");
+    throw new MedusaError(
+      MedusaError.Types.NOT_FOUND,
+      "Repair ticket not found",
+    );
   }
 
   const ticket = tickets[0];
 
   // Restrict to customer who owns the ticket
   if (ticket.customer_id && ticket.customer_id !== customerId) {
-    throw new MedusaError(MedusaError.Types.UNAUTHORIZED, "Unauthorized to approve this repair");
+    throw new MedusaError(
+      MedusaError.Types.UNAUTHORIZED,
+      "Unauthorized to approve this repair",
+    );
   } else if (!ticket.customer_id) {
-    throw new MedusaError(MedusaError.Types.NOT_ALLOWED, "Cannot approve an anonymous ticket without a token");
+    throw new MedusaError(
+      MedusaError.Types.NOT_ALLOWED,
+      "Cannot approve an anonymous ticket without a token",
+    );
   }
 
   // Only allow approval if it's in a state that requires approval
   if (ticket.status !== "awaiting_approval") {
-    throw new MedusaError(MedusaError.Types.NOT_ALLOWED, "Ticket is not awaiting approval");
+    throw new MedusaError(
+      MedusaError.Types.NOT_ALLOWED,
+      "Ticket is not awaiting approval",
+    );
   }
 
   if (!isApproved) {

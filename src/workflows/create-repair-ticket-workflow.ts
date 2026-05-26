@@ -4,6 +4,7 @@ import {
 } from "@medusajs/framework/workflows-sdk";
 import { createDeviceStep } from "./steps/create-device";
 import { createRepairTicketStep } from "./steps/create-repair-ticket";
+import { emitComplianceRequestedEventStep } from "./steps/emit-compliance-requested-event";
 
 type CreateRepairTicketWorkflowInput = {
   device: {
@@ -19,6 +20,8 @@ type CreateRepairTicketWorkflowInput = {
     issue_description: string;
     technician_name?: string;
     accessories?: string;
+    terms_accepted?: boolean;
+    data_wiped_consent?: boolean;
   };
 };
 
@@ -33,6 +36,13 @@ export const createRepairTicketWorkflow = createWorkflow(
       issue_description: input.ticket.issue_description,
       technician_name: input.ticket.technician_name,
       accessories: input.ticket.accessories,
+      terms_accepted: input.ticket.terms_accepted,
+      data_wiped_consent: input.ticket.data_wiped_consent,
+    });
+
+    emitComplianceRequestedEventStep({
+      ticket_id: repairTicket.id,
+      terms_accepted: input.ticket.terms_accepted ?? false,
     });
 
     return new WorkflowResponse({

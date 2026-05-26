@@ -92,14 +92,17 @@ export default async function repairStatusChangedHandler({
               `Product variant ${part.title} (${part.id}) has no inventory items linked.`,
             );
           }
-          
+
           // Delete associated reservation
-          const [reservations] = await inventoryModule.listAndCountReservationItems({
-            line_item_id: `repair_${ticket.id}_${part.id}`
-          });
-          
+          const [reservations] =
+            await inventoryModule.listAndCountReservationItems({
+              line_item_id: `repair_${ticket.id}_${part.id}`,
+            });
+
           if (reservations?.length) {
-            await inventoryModule.deleteReservationItems(reservations.map((r: any) => r.id));
+            await inventoryModule.deleteReservationItems(
+              reservations.map((r: any) => r.id),
+            );
             logger.info(`Cleared reservation for variant ${part.title}`);
           }
         }
@@ -117,114 +120,7 @@ export default async function repairStatusChangedHandler({
     }
   }
 
-  // Handle Notifications (Email, SMS, WhatsApp)
-  try {
-    const notificationModule = container.resolve(
-      ModuleRegistrationName.NOTIFICATION,
-      { allowUnregistered: true },
-    );
-    if (notificationModule && ticket.customer_id) {
-      const customerModule = container.resolve(
-        ModuleRegistrationName.CUSTOMER,
-        { allowUnregistered: true },
-      );
-      if (customerModule) {
-        const customer = await customerModule.retrieveCustomer(
-          ticket.customer_id,
-        );
-        if (customer) {
-          const approvalUrl = ticket.approval_token
-            ? `${process.env.STORE_URL || "http://localhost:3000"}/store/repairs/track?token=${ticket.approval_token}`
-            : "";
-
-          const payloadData = {
-            ticket_number: ticket.ticket_number,
-            status: data.status,
-            device: ticket.device?.model_name,
-            total_estimate: (
-              Number(
-                (ticket.total_estimate as any)?.value ?? ticket.total_estimate,
-              ) / 100
-            ).toFixed(2),
-            approval_url: approvalUrl,
-          };
-
-          // Admin Internal Notification
-          await notificationModule
-            .createNotifications({
-              to: "admin",
-              channel: "admin", // Internal admin notification channel
-              template: "admin-repair-status",
-              data: {
-                ...payloadData,
-                customer_name: customer.first_name
-                  ? `${customer.first_name} ${customer.last_name || ""}`
-                  : customer.email,
-              },
-            })
-            .catch((e) =>
-              logger.warn(`Admin notification failed: ${e.message}`),
-            );
-          logger.info(
-            `Admin notification queued for ticket ${ticket.ticket_number}`,
-          );
-
-          // 1. Email Notification
-          if (customer.email) {
-            await notificationModule.createNotifications({
-              to: customer.email,
-              channel: "email",
-              template: "repair-status-updated",
-              data: payloadData,
-            });
-            logger.info(
-              `Email sent to ${customer.email} for ticket ${ticket.ticket_number}`,
-            );
-          }
-
-          // 2. SMS / WhatsApp Notification (Assuming customer.phone exists)
-          if (customer.phone) {
-            // SMS
-            await notificationModule
-              .createNotifications({
-                to: customer.phone,
-                channel: "sms",
-                template: "repair-status-updated-sms",
-                data: payloadData,
-              })
-              .catch((e) =>
-                logger.warn(
-                  `SMS provider not configured or failed: ${e.message}`,
-                ),
-              );
-            logger.info(
-              `SMS queued for ${customer.phone} for ticket ${ticket.ticket_number}`,
-            );
-
-            // WhatsApp (Custom channel label)
-            await notificationModule
-              .createNotifications({
-                to: customer.phone,
-                channel: "whatsapp",
-                template: "repair-status-updated-wa",
-                data: payloadData,
-              })
-              .catch((e) =>
-                logger.warn(
-                  `WhatsApp provider not configured or failed: ${e.message}`,
-                ),
-              );
-            logger.info(
-              `WhatsApp message queued for ${customer.phone} for ticket ${ticket.ticket_number}`,
-            );
-          }
-        }
-      }
-    }
-  } catch (err) {
-    logger.warn(`Failed to send notification for repair ticket: ${err}`);
-  }
-
+  // Notifications are now handled by the Omni-Notify subscriber in notifications.ts
   logger.info(
     `Processed event for repair ticket ${ticket.ticket_number} - Status: ${data.status}`,
   );

@@ -9,6 +9,8 @@ type CreateRepairTicketInput = {
   technician_name?: string;
   issue_description: string;
   accessories?: string;
+  terms_accepted?: boolean;
+  data_wiped_consent?: boolean;
   metadata?: Record<string, unknown>;
 };
 

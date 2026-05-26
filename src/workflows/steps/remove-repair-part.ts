@@ -1,5 +1,8 @@
 import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk";
-import { ContainerRegistrationKeys, ModuleRegistrationName } from "@medusajs/framework/utils";
+import {
+  ContainerRegistrationKeys,
+  ModuleRegistrationName,
+} from "@medusajs/framework/utils";
 
 type RemoveRepairPartInput = {
   repair_ticket_id: string;
@@ -11,7 +14,10 @@ export const removeRepairPartStep = createStep(
   async (input: RemoveRepairPartInput, { container }) => {
     const link = container.resolve(ContainerRegistrationKeys.LINK);
     const query = container.resolve(ContainerRegistrationKeys.QUERY);
-    const inventoryModule = container.resolve(ModuleRegistrationName.INVENTORY, { allowUnregistered: true }) as any;
+    const inventoryModule = container.resolve(
+      ModuleRegistrationName.INVENTORY,
+      { allowUnregistered: true },
+    ) as any;
 
     // We dismiss the specific link
     const linkData = {
@@ -26,9 +32,10 @@ export const removeRepairPartStep = createStep(
     // Free the reservation for this part/ticket combination
     if (inventoryModule) {
       // List reservations matching the line_item_id or metadata
-      const [reservations, count] = await inventoryModule.listAndCountReservationItems({
-        line_item_id: `repair_${input.repair_ticket_id}_${input.variant_id}`
-      });
+      const [reservations, count] =
+        await inventoryModule.listAndCountReservationItems({
+          line_item_id: `repair_${input.repair_ticket_id}_${input.variant_id}`,
+        });
 
       if (reservations?.length) {
         deletedReservationIds = reservations.map((r: any) => r.id);
@@ -38,13 +45,13 @@ export const removeRepairPartStep = createStep(
 
     return new StepResponse(
       { success: true },
-      { linkData, deletedReservationIds }
+      { linkData, deletedReservationIds },
     );
   },
   async (compensationData, { container }) => {
     if (!compensationData) return;
     const { linkData, deletedReservationIds } = compensationData;
-    
+
     // Re-create the link
     const link = container.resolve(ContainerRegistrationKeys.LINK);
     if (linkData) {
@@ -54,5 +61,5 @@ export const removeRepairPartStep = createStep(
     // Un-deleting reservations isn't natively supported, we'd have to recreate them.
     // For simplicity, we assume compensation recreates them entirely if needed, but since we don't have the original properties here, it's a gap.
     // A more robust implementation would save the full reservation details to restore them.
-  }
+  },
 );

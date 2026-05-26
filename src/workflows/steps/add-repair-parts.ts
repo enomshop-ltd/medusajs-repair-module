@@ -1,5 +1,8 @@
 import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk";
-import { ContainerRegistrationKeys, ModuleRegistrationName } from "@medusajs/framework/utils";
+import {
+  ContainerRegistrationKeys,
+  ModuleRegistrationName,
+} from "@medusajs/framework/utils";
 import { REPAIR_MODULE } from "../../modules/repair";
 import RepairModuleService from "../../modules/repair/service";
 
@@ -16,7 +19,10 @@ export const addRepairPartsStep = createStep(
     const link = container.resolve(ContainerRegistrationKeys.LINK);
     const repairService: RepairModuleService = container.resolve(REPAIR_MODULE);
     const query = container.resolve(ContainerRegistrationKeys.QUERY);
-    const inventoryModule = container.resolve(ModuleRegistrationName.INVENTORY, { allowUnregistered: true }) as any;
+    const inventoryModule = container.resolve(
+      ModuleRegistrationName.INVENTORY,
+      { allowUnregistered: true },
+    ) as any;
 
     // Create links between repair ticket and product variants
     const linkData = input.variant_ids.map((variantId) => ({
@@ -32,7 +38,11 @@ export const addRepairPartsStep = createStep(
     if (inventoryModule) {
       const { data: variantsWithInventory } = await query.graph({
         entity: "product_variant",
-        fields: ["id", "inventory_items.*", "inventory_items.inventory_item_id"],
+        fields: [
+          "id",
+          "inventory_items.*",
+          "inventory_items.inventory_item_id",
+        ],
         filters: { id: input.variant_ids },
       });
 
@@ -40,24 +50,30 @@ export const addRepairPartsStep = createStep(
         for (const variant of variantsWithInventory) {
           if (variant.inventory_items?.length) {
             for (const itemLink of variant.inventory_items) {
-              const [levels, count] = await inventoryModule.listAndCountInventoryLevels({
-                inventory_item_id: itemLink.inventory_item_id,
-              });
+              const [levels, count] =
+                await inventoryModule.listAndCountInventoryLevels({
+                  inventory_item_id: itemLink.inventory_item_id,
+                });
 
               if (levels?.length) {
                 // Determine a location to deduct from (for simplicity we pick the first one with stock, or just the first one if none have stock but we assume first)
-                const levelToAdjust = levels.find((l: any) => l.stocked_quantity > 0) || levels[0];
+                const levelToAdjust =
+                  levels.find((l: any) => l.stocked_quantity > 0) || levels[0];
                 const qtyToReserve = itemLink.required_quantity || 1;
 
-                const [reservation] = await inventoryModule.createReservationItems([
-                  {
-                    line_item_id: `repair_${input.repair_ticket_id}_${variant.id}`, // We supply a placeholder for reservations identifying
-                    inventory_item_id: levelToAdjust.inventory_item_id,
-                    location_id: levelToAdjust.location_id,
-                    quantity: qtyToReserve,
-                    metadata: { repair_ticket_id: input.repair_ticket_id, variant_id: variant.id }
-                  }
-                ]);
+                const [reservation] =
+                  await inventoryModule.createReservationItems([
+                    {
+                      line_item_id: `repair_${input.repair_ticket_id}_${variant.id}`, // We supply a placeholder for reservations identifying
+                      inventory_item_id: levelToAdjust.inventory_item_id,
+                      location_id: levelToAdjust.location_id,
+                      quantity: qtyToReserve,
+                      metadata: {
+                        repair_ticket_id: input.repair_ticket_id,
+                        variant_id: variant.id,
+                      },
+                    },
+                  ]);
                 createdReservationIds.push(reservation.id);
               }
             }
@@ -83,17 +99,14 @@ export const addRepairPartsStep = createStep(
       });
 
       // Store price data for display
-      priceMetadata = variantsWithPrices?.reduce(
-        (acc: any, variant: any) => {
-          acc[variant.id] = {
-            calculated_price: variant.calculated_price?.calculated_amount,
-            price_list_id: variant.calculated_price?.price_list?.id,
-            price_list_name: variant.calculated_price?.price_list?.name,
-          };
-          return acc;
-        },
-        {},
-      );
+      priceMetadata = variantsWithPrices?.reduce((acc: any, variant: any) => {
+        acc[variant.id] = {
+          calculated_price: variant.calculated_price?.calculated_amount,
+          price_list_id: variant.calculated_price?.price_list?.id,
+          price_list_name: variant.calculated_price?.price_list?.name,
+        };
+        return acc;
+      }, {});
     }
 
     return new StepResponse(
@@ -103,20 +116,23 @@ export const addRepairPartsStep = createStep(
         price_metadata: priceMetadata,
         created_reservations: createdReservationIds,
       },
-      { linkData, createdReservationIds }
+      { linkData, createdReservationIds },
     );
   },
   async (compensationData, { container }) => {
     if (!compensationData) return;
     const { linkData, createdReservationIds } = compensationData;
-    
+
     const link = container.resolve(ContainerRegistrationKeys.LINK);
     if (linkData) {
       await link.dismiss(linkData);
     }
 
     // Rollback reservations
-    const inventoryModule = container.resolve(ModuleRegistrationName.INVENTORY, { allowUnregistered: true }) as any;
+    const inventoryModule = container.resolve(
+      ModuleRegistrationName.INVENTORY,
+      { allowUnregistered: true },
+    ) as any;
     if (inventoryModule && createdReservationIds?.length) {
       await inventoryModule.deleteReservationItems(createdReservationIds);
     }

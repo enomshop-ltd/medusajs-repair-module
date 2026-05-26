@@ -19,6 +19,25 @@ A complete Repair Management System for Medusa, ideal for device repair shops. F
 
 ## Changelog
 
+### v1.7.0 - Frontend Optimization & Stability
+- **FreshJS Partials & View Transitions:** Overhauled the Storefront (`/repairs/*`) applications incorporating the `@fresh/runtime` `Partial` boundaries and `view-transition` meta tags for smooth, SPA-like navigation between dashboard, booking, and tracking pages.
+- **CSP Nonces Architecture:** Integrated baseline for Content Security Policy nonces targeting script behaviors in the repair booking and tracking frontend views to secure them against basic XSS vectors.
+
+### v1.6.0 - Universal PDF Invoice & Document Generation
+- **Dynamic PDF Rendering:** Added robust PDF generation utilizing `pdfkit` and `qrcode` across both the Admin Dashboard and the Frontend Customer portals.
+- **Support for Multiple Types:** Generates `Invoice`, `Quote`, `Receipt`, and `Job Card` layouts from a centralized internal template.
+- **Download Actions:** Embedded one-click PDF downloading into the Admin detail view header and the Customer / Storefront tracking widgets.
+
+### v1.5.0 - Omni-Channel Notifications & Client Dashboard
+- **Omni-Channel Notify Subscriber:** Designed a centralized subscriber module (`globalNotificationHandler` in `notifications.ts`) that dispatches contextual Email, SMS, and WhatsApp alerts for tracking Repair Status updates, Compliance actions, and reminders.
+- **My Repairs Dashboard (Storefront):** Added a `/repairs/dashboard` page where logged-in customers can review all their historical and active repairs natively in the web storefront.
+- **Improved Logging:** Implemented extensive tracking for customer API routes (both booking and retrieval) marking distinct success pathways and debugging traces.
+
+### v1.4.0 - Self-Service Booking & Compliance Tracking
+- **Storefront Booking Form:** Customers can now initiate and book repairs directly from the storefront (`/repairs/book`) when logged in. Devices details, serial numbers, and issue descriptions are sent directly directly into the backend workflow.
+- **Cost Estimate Display:** The storefront tracking widget now surfaces full estimate breakdowns alongside "Inventory Parts" and "Custom Parts/Services". Added an integrated deep-link for Store Inventory parts to let users view specific component details on the frontend.
+- **Compliance Integration:** Standardized the Legal & Data Consent compliance directly into the book repair flow, tracking 'T&C Accepted' and 'Data Wipe' consents.
+
 ### v1.3.1 - Bug Fixes & Improvements
 - **Currency Formatting:** Created `useStoreCurrency` custom React hook. This hook fetches the configured `default_currency_code` and `supported_currencies` directly from Medusa (`/admin/stores`) to ensure dynamic native currency formats (like KES) are utilized across analytics, widgets, and tickets, instead of hardcoded USD "$".
 - **Icons Import Fix:** Fixed build error by changing out-of-date export `Bell` from `@medusajs/icons` to `BellAlert` in the repairs admin page.

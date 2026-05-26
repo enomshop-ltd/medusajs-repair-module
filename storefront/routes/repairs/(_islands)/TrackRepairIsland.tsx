@@ -199,141 +199,336 @@ export default function TrackRepairIsland({
           {(ticket.total_estimate > 0 || ticket.total_actual > 0) && (
             <div className="bg-white rounded-lg shadow-md p-6">
               <h3 className="text-xl font-bold mb-4">Cost Breakdown</h3>
-              <div className="space-y-2">
+
+              {ticket.parts && ticket.parts.length > 0 && (
+                <div className="mb-4 space-y-2">
+                  <h4 className="font-semibold text-gray-700 mb-2">
+                    Inventory Parts
+                  </h4>
+                  {ticket.parts.map((p: any) => (
+                    <div
+                      key={p.id}
+                      className="flex justify-between items-center text-sm p-3 bg-gray-50 border border-gray-100 rounded"
+                    >
+                      <div className="flex flex-col">
+                        <span className="font-medium text-gray-800">
+                          {p.title}{" "}
+                          {p.product?.title ? `(${p.product.title})` : ""}
+                        </span>
+                        <span className="text-gray-500 text-xs text-left">
+                          SKU: {p.sku || "-"}
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        {p.product?.handle && (
+                          <a
+                            href={`/products/${p.product.handle}`}
+                            target="_blank"
+                            className="text-blue-500 hover:underline text-xs mb-1"
+                          >
+                            View in store
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {ticket.custom_parts && ticket.custom_parts.length > 0 && (
+                <div className="mb-4 space-y-2">
+                  <h4 className="font-semibold text-gray-700 mb-2">
+                    Custom Parts / Services
+                  </h4>
+                  {ticket.custom_parts.map((cp: any, idx: number) => (
+                    <div
+                      key={idx}
+                      className="flex justify-between items-center text-sm p-3 bg-gray-50 border border-gray-100 rounded"
+                    >
+                      <span className="font-medium text-gray-800">
+                        {cp.name}
+                      </span>
+                      <span className="font-medium">
+                        ${(cp.price / 100).toFixed(2)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="space-y-2 border-t pt-4">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Parts:</span>
+                  <span className="text-gray-600">Parts Estimate:</span>
                   <span className="font-medium">
                     ${((ticket.parts_estimate || 0) / 100).toFixed(2)}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Labor:</span>
+                  <span className="text-gray-600">Labor Estimate:</span>
                   <span className="font-medium">
                     ${((ticket.labor_estimate || 0) / 100).toFixed(2)}
                   </span>
                 </div>
-                <div className="flex justify-between text-lg font-bold border-t pt-2">
+                <div className="flex justify-between text-lg font-bold border-t pt-2 mt-2">
                   <span>Total Estimate:</span>
                   <span>
                     ${((ticket.total_estimate || 0) / 100).toFixed(2)}
                   </span>
                 </div>
+
+                <div className="mt-4 flex gap-3 pt-4 border-t border-gray-100">
+                  <a
+                    href={
+                      initialToken
+                        ? `${backendUrl}/store/repairs/token/${initialToken}/document?type=quote`
+                        : `${backendUrl}/store/repairs/${ticket.id}/document?type=quote`
+                    }
+                    target="_blank"
+                    className="flex-1 text-center px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition font-medium text-sm border border-gray-200"
+                  >
+                    Download Quote (PDF)
+                  </a>
+                  {ticket.status === "completed" ||
+                  ticket.status === "ready" ? (
+                    <a
+                      href={
+                        initialToken
+                          ? `${backendUrl}/store/repairs/token/${initialToken}/document?type=invoice`
+                          : `${backendUrl}/store/repairs/${ticket.id}/document?type=invoice`
+                      }
+                      target="_blank"
+                      className="flex-1 text-center px-4 py-2 bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition font-medium text-sm border border-blue-200"
+                    >
+                      Download Invoice (PDF)
+                    </a>
+                  ) : null}
+                </div>
               </div>
 
-              {ticket.status === "awaiting_approval" && !ticket.is_approved && (
-                <div className="mt-6 p-4 bg-orange-50 border border-orange-200 rounded">
-                  <p className="text-orange-800 font-medium mb-3">
-                    Your approval is required to proceed with the repair.
+              {!ticket.terms_accepted && (
+                <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded">
+                  <h4 className="text-yellow-800 font-bold mb-2">
+                    Action Required: Legal & Compliance
+                  </h4>
+                  <p className="text-yellow-800 mb-4 text-sm">
+                    Before we can proceed with any work, you must review and
+                    agree to our Repair Terms & Conditions.
                   </p>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={async () => {
-                        console.debug(
-                          `[TrackRepairIsland] Approving repair for ticket ID: ${ticket.id}`,
-                        );
-                        try {
-                          let response;
-                          if (initialToken) {
-                            response = await fetch(
-                              `${backendUrl}/store/repairs/approve`,
-                              {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({
-                                  token: initialToken,
-                                  approved: true,
-                                }),
-                              },
-                            );
-                          } else {
-                            response = await fetch(
-                              `${backendUrl}/store/repairs/${ticket.id}/approve`,
-                              {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ approved: true }),
-                              },
-                            );
-                          }
-                          if (response.ok) {
-                            alert("Repair approved! Work will begin shortly.");
-                            if (initialToken) handleTokenSearch(initialToken);
-                            else handleSearch(new Event("submit") as any);
-                            console.debug(
-                              `[TrackRepairIsland] Successfully approved repair ticket ID: ${ticket.id}`,
-                            );
-                          } else {
-                            throw new Error("Failed to approve repair");
-                          }
-                        } catch (err) {
-                          console.error(
-                            `[TrackRepairIsland] Error approving repair ticket ID: ${ticket.id}`,
-                            err,
-                          );
-                          alert("Failed to approve repair");
-                        }
-                      }}
-                      className="flex-1 px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700"
-                    >
-                      Approve Repair
-                    </button>
-                    <button
-                      onClick={async () => {
-                        if (
-                          !confirm(
-                            "Are you sure you want to decline this repair? This will cancel the ticket.",
-                          )
-                        )
-                          return;
-                        console.debug(
-                          `[TrackRepairIsland] Declining repair for ticket ID: ${ticket.id}`,
-                        );
-                        try {
-                          let response;
-                          if (initialToken) {
-                            response = await fetch(
-                              `${backendUrl}/store/repairs/approve`,
-                              {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({
-                                  token: initialToken,
-                                  approved: false,
-                                }),
-                              },
-                            );
-                          } else {
-                            response = await fetch(
-                              `${backendUrl}/store/repairs/${ticket.id}/approve`,
-                              {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ approved: false }),
-                              },
-                            );
-                          }
-                          if (response.ok) {
-                            alert("Repair has been declined and cancelled.");
-                            if (initialToken) handleTokenSearch(initialToken);
-                            else handleSearch(new Event("submit") as any);
-                          } else {
-                            throw new Error("Failed to decline repair");
-                          }
-                        } catch (err) {
-                          console.error(
-                            `[TrackRepairIsland] Error declining repair ticket ID: ${ticket.id}`,
-                            err,
-                          );
-                          alert("Failed to decline repair");
-                        }
-                      }}
-                      className="flex-1 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
-                    >
-                      Decline Repair
-                    </button>
+
+                  <div className="flex flex-col gap-3 mb-4">
+                    <label className="flex items-center gap-2 text-gray-800">
+                      <input
+                        type="checkbox"
+                        id="termsCheck"
+                        className="rounded border-gray-300"
+                      />
+                      <span className="text-sm">
+                        I agree to the Repair Terms & Conditions
+                      </span>
+                    </label>
+                    <label className="flex items-center gap-2 text-gray-800">
+                      <input
+                        type="checkbox"
+                        id="dataCheck"
+                        className="rounded border-gray-300"
+                      />
+                      <span className="text-sm">
+                        I consent to a device data wipe (if necessary)
+                      </span>
+                    </label>
                   </div>
+
+                  <button
+                    onClick={async () => {
+                      const terms = (
+                        document.getElementById(
+                          "termsCheck",
+                        ) as HTMLInputElement
+                      ).checked;
+                      const dataWipe = (
+                        document.getElementById("dataCheck") as HTMLInputElement
+                      ).checked;
+
+                      if (!terms) {
+                        alert("Please agree to the Repair Terms to continue.");
+                        return;
+                      }
+
+                      try {
+                        let response;
+                        if (initialToken) {
+                          response = await fetch(
+                            `${backendUrl}/store/repairs/compliance`,
+                            {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                token: initialToken,
+                                terms_accepted: true,
+                                data_wiped_consent: dataWipe,
+                              }),
+                            },
+                          );
+                        } else {
+                          response = await fetch(
+                            `${backendUrl}/store/repairs/${ticket.id}/compliance`,
+                            {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                terms_accepted: true,
+                                data_wiped_consent: dataWipe,
+                              }),
+                            },
+                          );
+                        }
+
+                        if (response.ok) {
+                          alert("Terms accepted successfully!");
+                          if (initialToken) handleTokenSearch(initialToken);
+                          else handleSearch(new Event("submit") as any);
+                        } else {
+                          throw new Error("Failed to accept terms");
+                        }
+                      } catch (err: any) {
+                        alert(
+                          err.message || "Failed to update compliance details",
+                        );
+                      }
+                    }}
+                    className="w-full px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition"
+                  >
+                    Accept & Continue
+                  </button>
                 </div>
               )}
+
+              {ticket.status === "awaiting_approval" &&
+                !ticket.is_approved &&
+                ticket.terms_accepted && (
+                  <div className="mt-6 p-4 bg-orange-50 border border-orange-200 rounded">
+                    <p className="text-orange-800 font-medium mb-3">
+                      Your approval is required to proceed with the repair.
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={async () => {
+                          console.debug(
+                            `[TrackRepairIsland] Approving repair for ticket ID: ${ticket.id}`,
+                          );
+                          try {
+                            let response;
+                            if (initialToken) {
+                              response = await fetch(
+                                `${backendUrl}/store/repairs/approve`,
+                                {
+                                  method: "POST",
+                                  headers: {
+                                    "Content-Type": "application/json",
+                                  },
+                                  body: JSON.stringify({
+                                    token: initialToken,
+                                    approved: true,
+                                  }),
+                                },
+                              );
+                            } else {
+                              response = await fetch(
+                                `${backendUrl}/store/repairs/${ticket.id}/approve`,
+                                {
+                                  method: "POST",
+                                  headers: {
+                                    "Content-Type": "application/json",
+                                  },
+                                  body: JSON.stringify({ approved: true }),
+                                },
+                              );
+                            }
+                            if (response.ok) {
+                              alert(
+                                "Repair approved! Work will begin shortly.",
+                              );
+                              if (initialToken) handleTokenSearch(initialToken);
+                              else handleSearch(new Event("submit") as any);
+                              console.debug(
+                                `[TrackRepairIsland] Successfully approved repair ticket ID: ${ticket.id}`,
+                              );
+                            } else {
+                              throw new Error("Failed to approve repair");
+                            }
+                          } catch (err) {
+                            console.error(
+                              `[TrackRepairIsland] Error approving repair ticket ID: ${ticket.id}`,
+                              err,
+                            );
+                            alert("Failed to approve repair");
+                          }
+                        }}
+                        className="flex-1 px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700"
+                      >
+                        Approve Repair
+                      </button>
+                      <button
+                        onClick={async () => {
+                          if (
+                            !confirm(
+                              "Are you sure you want to decline this repair? This will cancel the ticket.",
+                            )
+                          )
+                            return;
+                          console.debug(
+                            `[TrackRepairIsland] Declining repair for ticket ID: ${ticket.id}`,
+                          );
+                          try {
+                            let response;
+                            if (initialToken) {
+                              response = await fetch(
+                                `${backendUrl}/store/repairs/approve`,
+                                {
+                                  method: "POST",
+                                  headers: {
+                                    "Content-Type": "application/json",
+                                  },
+                                  body: JSON.stringify({
+                                    token: initialToken,
+                                    approved: false,
+                                  }),
+                                },
+                              );
+                            } else {
+                              response = await fetch(
+                                `${backendUrl}/store/repairs/${ticket.id}/approve`,
+                                {
+                                  method: "POST",
+                                  headers: {
+                                    "Content-Type": "application/json",
+                                  },
+                                  body: JSON.stringify({ approved: false }),
+                                },
+                              );
+                            }
+                            if (response.ok) {
+                              alert("Repair has been declined and cancelled.");
+                              if (initialToken) handleTokenSearch(initialToken);
+                              else handleSearch(new Event("submit") as any);
+                            } else {
+                              throw new Error("Failed to decline repair");
+                            }
+                          } catch (err) {
+                            console.error(
+                              `[TrackRepairIsland] Error declining repair ticket ID: ${ticket.id}`,
+                              err,
+                            );
+                            alert("Failed to decline repair");
+                          }
+                        }}
+                        className="flex-1 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+                      >
+                        Decline Repair
+                      </button>
+                    </div>
+                  </div>
+                )}
 
               {ticket.is_approved && (
                 <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded">
