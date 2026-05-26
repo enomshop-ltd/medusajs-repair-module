@@ -10,16 +10,29 @@ export async function GET(
   res: MedusaResponse,
 ) {
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY);
-  const identifier = req.params.serial_number;
+  const logger = req.scope.resolve("logger");
+  const encodedIdentifier = req.params.serial_number || req.params.id || req.params[0] || (req.url.split('/').pop());
+  const identifier = decodeURIComponent(encodedIdentifier || "").trim();
 
-  // Try finding by ticket number first
-  const { data: ticketsByNumber } = await query.graph({
-    entity: "repair_ticket",
-    fields: ["*", "device.*", "media.*", "notes.*", "updates.*"],
-    filters: { ticket_number: identifier },
-  });
+  logger.info(`[Store/Repairs] Tracking search initiated. Identifier: "${identifier}", Encoded: "${encodedIdentifier}"`);
 
-  if (ticketsByNumber && ticketsByNumber.length > 0) {
+  if (!identifier) {
+    throw new MedusaError(MedusaError.Types.INVALID_DATA, "Identifier is missing");
+  }
+
+  let ticketsByNumber: any[] = [];
+  try {
+    const result = await query.graph({
+      entity: "repair_ticket",
+      fields: ["*", "device.*", "media.*", "notes.*", "updates.*"],
+      filters: { ticket_number: identifier },
+    });
+    ticketsByNumber = result.data || [];
+  } catch (error: any) {
+    logger.warn(`[Store/Repairs] Error querying ticket_number: ${error.message}`);
+  }
+
+  if (ticketsByNumber.length > 0) {
     const ticket = ticketsByNumber[0];
     let parts = [];
     try {
@@ -48,14 +61,19 @@ export async function GET(
     return res.json({ repair_ticket: fullPayload });
   }
 
-  // Fallback to find by serial number
-  const { data: devices } = await query.graph({
-    entity: "device",
-    fields: ["id", "serial_number", "model_name", "brand"],
-    filters: { serial_number: identifier },
-  });
+  let devices: any[] = [];
+  try {
+    const result = await query.graph({
+      entity: "device",
+      fields: ["*", "repair_tickets.*"],
+      filters: { serial_number: identifier },
+    });
+    devices = result.data || [];
+  } catch (error: any) {
+    logger.warn(`[Store/Repairs] Error querying serial_number: ${error.message}`);
+  }
 
-  if (!devices || devices.length === 0) {
+  if (devices.length === 0) {
     throw new MedusaError(
       MedusaError.Types.NOT_FOUND,
       `Trackable item with identifier ${identifier} not found`,
@@ -64,14 +82,19 @@ export async function GET(
 
   const device = devices[0];
 
-  // Find all repair tickets for this device
-  const { data: tickets } = await query.graph({
-    entity: "repair_ticket",
-    fields: ["*", "device.*", "media.*", "notes.*", "updates.*"],
-    filters: { device_id: device.id },
-  });
+  let tickets: any[] = [];
+  try {
+    const result = await query.graph({
+      entity: "repair_ticket",
+      fields: ["*", "device.*", "media.*", "notes.*", "updates.*"],
+      filters: { device_id: device.id },
+    });
+    tickets = result.data || [];
+  } catch (error: any) {
+    logger.warn(`[Store/Repairs] Error querying tickets for device: ${error.message}`);
+  }
 
-  if (!tickets || tickets.length === 0) {
+  if (tickets.length === 0) {
     throw new MedusaError(
       MedusaError.Types.NOT_FOUND,
       `No repair tickets found for device ${identifier}`,

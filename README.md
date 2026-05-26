@@ -19,7 +19,13 @@ A complete Repair Management System for Medusa, ideal for device repair shops. F
 
 ## Changelog
 
-### v1.7.0 - Frontend Optimization & Stability
+### v1.8.0 (Current)
+- **Bug Fix**: Fixed tracking backend returning 500 logic errors when invalid relational mappings were queried, which caused false "Repair ticket not found" statuses on the storefront Tracking page.
+- **Bug Fix**: Secured the `/store/customers/me/repairs` dashboard endpoint using Medusa's standard `authenticate` middleware to fix the "Go to login" generic connection failure.
+- **Stability Improvement**: Bolstered `GraphQuery` error handling to gracefully degrade instead of crashing the endpoint, preventing confusing errors on the frontend.
+
+### v1.7.0
+ - Frontend Optimization & Stability
 - **FreshJS Partials & View Transitions:** Overhauled the Storefront (`/repairs/*`) applications incorporating the `@fresh/runtime` `Partial` boundaries and `view-transition` meta tags for smooth, SPA-like navigation between dashboard, booking, and tracking pages.
 - **CSP Nonces Architecture:** Integrated baseline for Content Security Policy nonces targeting script behaviors in the repair booking and tracking frontend views to secure them against basic XSS vectors.
 
