@@ -1,5 +1,6 @@
 import { MiddlewareRoute, validateAndTransformBody } from "@medusajs/framework";
 import { z } from "@medusajs/framework/zod";
+import { authenticate } from "@medusajs/framework/http";
 
 const AddMessageSchema = z.object({
   message: z.string(),
@@ -12,4 +13,14 @@ export const storeRepairMiddlewares: MiddlewareRoute[] = [
     matcher: "/store/repairs/:id/messages",
     middlewares: [validateAndTransformBody(AddMessageSchema)],
   },
+  {
+    method: ["POST"],
+    matcher: "/store/repairs/:id/approve",
+    middlewares: [authenticate("customer", ["session", "bearer", "custom"])],
+  },
+  {
+    method: ["POST"],
+    matcher: "/store/repairs/:id/compliance",
+    middlewares: [authenticate("customer", ["session", "bearer", "custom"])],
+  }
 ];
