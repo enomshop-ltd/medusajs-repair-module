@@ -2,7 +2,7 @@
 
 A complete Repair Management System for Medusa, ideal for device repair shops. Features include customer tracking, parts management, real-time chat, cost approval flows, warranty tracking, and in-depth reporting.
 
-## Key Features
+## Key Features  
 
 - **Device & Ticket Management:** Track devices by standard serial numbers or IMEI. Manage repair life-cycles across multiple statuses (`received`, `diagnosing`, `awaiting_approval`, `repairing`, `ready`, `completed`, `cancelled`).
 - **Parts & Inventory:** Add both standard Medusa product variants (with inventory integration) and custom parts with ad-hoc pricing to any ticket. Completed tickets auto-deduct standard inventory.
