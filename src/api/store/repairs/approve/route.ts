@@ -43,14 +43,25 @@ export async function POST(
     );
   }
 
-  const newStatus = approved ? "repairing" : "cancelled";
+  const isApproved = approved ?? true;
 
-  const updatedTicket = await repairService.updateRepairTickets({
-    id: ticket.id,
-    is_approved: approved,
-    approved_at: approved ? new Date() : null,
-    status: newStatus as any,
+  if (!isApproved) {
+    const newStatus = "cancelled";
+    const updatedTicket = await repairService.updateRepairTickets({
+      id: ticket.id,
+      status: newStatus as any,
+    });
+    res.json({ ticket: updatedTicket, message: "Repair declined. Ticket cancelled." });
+    return;
+  }
+
+  // Use workflow for approval
+  const { approveRepairCostWorkflow } = await import("../../../../workflows/approve-repair-cost-workflow");
+  const { result } = await approveRepairCostWorkflow(req.scope).run({
+    input: {
+      repair_ticket_id: ticket.id,
+    },
   });
 
-  res.json({ ticket: updatedTicket });
+  res.json({ ticket: result.repairTicket, message: "Repair cost approved successfully." });
 }
