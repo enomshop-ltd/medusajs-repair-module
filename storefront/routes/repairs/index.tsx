@@ -1,5 +1,6 @@
 import { Head, Partial } from "fresh/runtime";
 import CustomerRepairsIsland from "./(_islands)/CustomerRepairsIsland.tsx";
+import { STORE_NAME } from "../../lib/utils.ts";
 
 export default function CustomerRepairsRoute() {
   const backendUrl =
@@ -9,12 +10,12 @@ export default function CustomerRepairsRoute() {
   return (
     <>
       <Head>
-        <title>My Repairs | Apple4All</title>
+        <title>My Repairs | {STORE_NAME}</title>
         <meta
           name="description"
           content="Manage and track your repair requests."
         />
-        <meta property="og:title" content="My Repairs | Apple4All" />
+        <meta property="og:title" content={`My Repairs | ${STORE_NAME}`} />
         <meta
           property="og:description"
           content="Manage and track your repair requests."

@@ -1,5 +1,6 @@
 import { Head, Partial } from "fresh/runtime";
 import BookRepairIsland from "./(_islands)/BookRepairIsland.tsx";
+import { STORE_NAME } from "../../lib/utils.ts";
 
 export default function BookRepairRoute() {
   const backendUrl =
@@ -14,7 +15,7 @@ export default function BookRepairRoute() {
           name="description"
           content="Initiate a device for repair and get a pickup."
         />
-        <meta property="og:title" content="Book a Repair | Apple4All" />
+        <meta property="og:title" content={`Book a Repair | ${STORE_NAME}`} />
         <meta
           property="og:description"
           content="Initiate a device for repair and get a pickup."
