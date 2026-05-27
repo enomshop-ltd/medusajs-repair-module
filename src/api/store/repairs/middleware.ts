@@ -16,11 +16,11 @@ export const storeRepairMiddlewares: MiddlewareRoute[] = [
   {
     method: ["POST"],
     matcher: "/store/repairs/:id/approve",
-    middlewares: [authenticate("customer", ["session", "bearer", "custom"])],
+    middlewares: [authenticate("customer", ["session", "bearer"])],
   },
   {
     method: ["POST"],
     matcher: "/store/repairs/:id/compliance",
-    middlewares: [authenticate("customer", ["session", "bearer", "custom"])],
+    middlewares: [authenticate("customer", ["session", "bearer"])],
   }
 ];

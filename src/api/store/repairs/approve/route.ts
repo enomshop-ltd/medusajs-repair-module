@@ -5,6 +5,7 @@ import {
 } from "@medusajs/framework/utils";
 import { REPAIR_MODULE } from "../../../../modules/repair";
 import RepairModuleService from "../../../../modules/repair/service";
+import { approveRepairCostWorkflow } from "../../../../workflows/approve-repair-cost-workflow";
 
 // POST /store/repairs/approve
 export async function POST(
@@ -56,7 +57,6 @@ export async function POST(
   }
 
   // Use workflow for approval
-  const { approveRepairCostWorkflow } = await import("../../../../workflows/approve-repair-cost-workflow");
   const { result } = await approveRepairCostWorkflow(req.scope).run({
     input: {
       repair_ticket_id: ticket.id,
