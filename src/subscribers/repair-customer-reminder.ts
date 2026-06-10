@@ -58,9 +58,8 @@ export default async function repairCustomerReminderHandler({
             ticket_number: ticket.ticket_number,
             status: ticket.status,
             device: ticket.device?.model_name,
-            total_estimate: (
-              Number((ticket.total_estimate as any)?.value ?? ticket.total_estimate) / 100
-            ).toFixed(2),
+            total_estimate:
+              Number((ticket.total_estimate as any)?.value ?? ticket.total_estimate) / 100,
             approval_url: approvalUrl,
             nudge_message: nudgeMessage
           };

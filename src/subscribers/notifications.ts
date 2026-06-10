@@ -100,11 +100,10 @@ export default async function globalNotificationHandler({
         device: deviceModel,
         status: data.status || ticket.status,
         approval_url: approvalUrl,
-        total_estimate: (
+        total_estimate:
           Number(
             (ticket.total_estimate as any)?.value ?? ticket.total_estimate,
-          ) / 100
-        ).toFixed(2),
+          ) / 100,
       };
 
       if (eventName === "repair.status_changed") {

@@ -417,7 +417,7 @@ const RepairDetailPage = () => {
           </div>
           <div className="flex items-center gap-2">
             <a
-              href={`/api/admin/repairs/${id}/document?type=quote`}
+              href={`/admin/repairs/${id}/document?type=quote`}
               target="_blank"
             >
               <Button variant="secondary" size="small">
@@ -425,7 +425,7 @@ const RepairDetailPage = () => {
               </Button>
             </a>
             <a
-              href={`/api/admin/repairs/${id}/document?type=invoice`}
+              href={`/admin/repairs/${id}/document?type=invoice`}
               target="_blank"
             >
               <Button variant="secondary" size="small">
@@ -433,7 +433,7 @@ const RepairDetailPage = () => {
               </Button>
             </a>
             <a
-              href={`/api/admin/repairs/${id}/document?type=job_card`}
+              href={`/admin/repairs/${id}/document?type=job_card`}
               target="_blank"
             >
               <Button variant="secondary" size="small">

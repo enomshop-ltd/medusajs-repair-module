@@ -80,14 +80,14 @@ export default function OrderConfirmation({
   total = 50,
 }: OrderConfirmationProps) {
   const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-KE", {
       style: "currency",
       currency: currency.toUpperCase(),
     }).format(amount);
   };
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("en-US", {
+    return new Date(date).toLocaleDateString("en-KE", {
       weekday: "short",
       year: "numeric",
       month: "short",
